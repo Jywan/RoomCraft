@@ -58,6 +58,11 @@ Thumbs.db
 # Crashlytics
 crashlytics-build.properties
 
+# Blog style guide & posts
+BLOG-STYLE-GUIDE.md
+blog/
+snapshots/
+
 # Packages
 **/[Pp]ackages/com.unity.*/
 

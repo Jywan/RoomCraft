@@ -32,6 +32,14 @@
 - WebGL (웹 배포)
 - Android / iOS
 
+## 조작법
+
+| 입력 | 동작 |
+|------|------|
+| T 키 | 탑뷰 ↔ 3D 뷰 전환 |
+| 좌클릭 드래그 (3D 뷰) | 카메라 회전 |
+| 스크롤 (트랙패드 두 손가락) | 줌 인/아웃 |
+
 ## 프로젝트 구조
 
 ```
@@ -52,8 +60,17 @@ RoomCraft_Unity/Assets/
 ## 개발 진행 상황
 
 - [x] Phase 1-1: 방 생성 시스템 (바닥 + 벽)
-- [ ] Phase 1-2: 카메라 시스템 (탑뷰 ↔ 3D 전환)
+- [x] Phase 1-2: 카메라 시스템 (탑뷰 ↔ 3D 전환, 줌)
 - [ ] Phase 2: 가구 드래그 앤 드롭, 회전, 충돌 감지
 - [ ] Phase 3: 가구 생성 UI, 동적 모델 생성
 - [ ] Phase 4: UI/UX 완성, 프로젝트 저장/불러오기
 - [ ] Phase 5: WebGL/모바일 빌드 배포
+
+## 개발 중 이슈 & 해결
+
+| 이슈 | 원인 | 해결 |
+|------|------|------|
+| `InvalidOperationException: You are trying to read Input using the UnityEngine.Input class, but you have switched active Input handling to Input System package` | New Input System 패키지 설치 시 레거시 Input API가 비활성화됨 | **Project Settings > Player > Other Settings > Active Input Handling**을 **Both**로 변경 |
+| Rider에서 자동완성(IntelliSense) 안 됨 | Rider가 .sln 없이 파일만 열린 상태 | Unity에서 스크립트 더블클릭으로 열거나, Rider에서 `RoomCraft_Unity.sln`을 직접 Open |
+| 맥북 트랙패드에서 우클릭 드래그 불편 | 트랙패드로 우클릭 드래그가 어려움 | 좌클릭 드래그로 카메라 회전 변경 |
+| 카메라 회전 감도가 너무 낮음 | `Time.deltaTime` 곱셈으로 입력값이 지나치게 작아짐 | 고정 배수(`0.1f`)로 변경 |

@@ -30,7 +30,7 @@ namespace RoomCraft.Room
             floor.transform.parent = currentRoom.transform;
             
             // 바닥 : 가로 x 세로, 두께 0.1m
-            floor.transform.localScale = new Vector3(data.width, 0.1f, data.height);
+            floor.transform.localScale = new Vector3(data.width, 0.1f, data.depth);
             floor.transform.localPosition = new Vector3(0f, -0.05f, 0f);
             
             if (floorMaterial != null)
@@ -50,7 +50,7 @@ namespace RoomCraft.Room
                 new Vector3(data.width, data.height, wallThickness));
             
             CreateWall("Wall_Front", data,
-                new Vector3(0f, -data.height / 2f, -data.depth / 2f),
+                new Vector3(0f, data.height / 2f, -data.depth / 2f),
                 new Vector3(data.width, data.height, wallThickness));
             
             CreateWall("Wall_Left", data,
