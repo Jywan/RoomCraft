@@ -59,4 +59,14 @@ Thumbs.db
 crashlytics-build.properties
 
 # Packages
-/[Pp]ackages/com.unity.*/
+**/[Pp]ackages/com.unity.*/
+
+# Unity Template (불필요)
+**/TutorialInfo/
+
+# Visual Scripting Generated (미사용)
+**/Unity.VisualScripting.Generated/
+
+# Readme asset
+**/Readme.asset
+**/Readme.asset.meta
