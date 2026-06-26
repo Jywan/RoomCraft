@@ -1,0 +1,178 @@
+using RoomCraft.Data;
+using UnityEngine;
+
+namespace RoomCraft.Furniture
+{
+    /// <summary>
+    /// 가구의 인터렉션을 총괄하는 매니저
+    /// 가구 생성, 선택, 드래그 이동, 회전, 삭제를 처리한다.
+    /// 씬에 하나만 존재하며 빈 GameObject에 붙여서 사용.
+    /// </summary>
+    public class FurnitureInteraction : MonoBehaviour
+    {
+        [Header("Settings")]
+        [SerializeField] private LayerMask floorLayer;          // 바닥 레이어 (드래그 시 Raycast 대상)
+        [SerializeField] private LayerMask furnitureLayer;      // 가구 레이어 (클릭 감지용)
+        
+        private FurnitureObject selectedFurniture = null;
+        private bool isDragging = false;
+        private Camera mainCamera;
+
+        private void Start()
+        {
+            mainCamera = Camera.main;
+        }
+        
+        private void Update()
+        {
+            HandleSelection();
+            HandleDrag();
+            HandleRotation();
+            HandleDelete();
+        }
+        
+        // ===== 가구 생성 =====
+        
+        /// <summary>
+        /// 새 가구를 생성해서 씬에 배치
+        /// 기본 Cube로 만들고, FurnitureObject 컴포넌트를 붙여서 초기화
+        /// </summary>
+        public FurnitureObject CreateFurniture(FurnitureData data)
+        {
+            GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obj.layer = LayerMask.NameToLayer("Furniture");
+            
+            FurnitureObject furniture = obj.AddComponent<FurnitureObject>();
+            furniture.Initialize(data);
+            
+            return furniture;
+        }
+        
+        
+        // ===== 선택 처리 =====
+        
+        /// <summary>
+        /// 좌클릭 시 Ray를 쏴서 가구를 선택하거나 선택 해제한다.
+        /// 가구를 클릭하면 선택, 빈 곳을 클릭하면 선택 해제
+        /// </summary>
+        private void HandleSelection()
+        {
+            if (!Input.GetMouseButtonDown(0)) return;
+            
+            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, 100f))
+            {
+                FurnitureObject clicked = hit.collider.GetComponent<FurnitureObject>();
+
+                if (clicked != null)
+                {
+                    // 기존 선택 해제
+                    if (selectedFurniture != null && selectedFurniture != clicked)
+                        selectedFurniture.Deselect();
+                    
+                    selectedFurniture = clicked;
+                    selectedFurniture.Select();
+                    isDragging = true;
+                }
+                else
+                {
+                    // 가구가 아닌곳 클릭 -> 선택 해제
+                    DeselectCurrent();
+                }
+            }
+            else
+            {
+                DeselectCurrent();
+            }
+        }
+        
+        
+        // ===== 드래그 이동 =====
+        
+        /// <summary>
+        /// 선택된 가구가 있고 드래그 중일 때, 마우스 위치를 바닥에 Ray로 쏴서
+        /// 가구를 해당 위치로 이동시킨다.
+        /// 마우스를 떼면 드래그 종료
+        /// </summary>
+        private void HandleDrag()
+        {
+            if (selectedFurniture == null || !isDragging) return;
+            
+            // 마우스 뗐으면 드래그 종료
+            if (Input.GetMouseButtonUp(0))
+            {
+                isDragging = false;
+                return;
+            }
+            
+            // 바닥에 Raycast해서 위치 가져오기
+            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, 100f, floorLayer))
+            {
+                selectedFurniture.MoveTo(hit.point);
+            }
+        }
+        
+        
+        // ===== 회전 =====
+
+        /// <summary>
+        /// R키를 누르면 선택된 가구를 90도 회전시킨다
+        /// </summary>
+        private void HandleRotation()
+        {
+            if (selectedFurniture == null) return;
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                selectedFurniture.Rotate90();
+            }
+        }
+        
+        
+        // ===== 삭제 =====
+
+        /// <summary>
+        /// Delete 또는 Backspace 키를 누르면 선택된 가구를 삭제한다.
+        /// </summary>
+        private void HandleDelete()
+        {
+            if (selectedFurniture == null) return;
+
+            if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace))
+            {
+                Destroy(selectedFurniture.gameObject);
+                selectedFurniture = null;
+            }
+        }
+        
+        
+        // ===== 유틸 =====
+        
+        /// <summary>
+        /// 현재 선택 해제.
+        /// </summary>
+        private void DeselectCurrent()
+        {
+            if (selectedFurniture != null)
+            {
+                selectedFurniture.Deselect();
+                selectedFurniture = null;
+            }
+            isDragging = false;
+        }
+        
+        
+        /// <summary>
+        /// 외부에서 현재 선택된 가구 정보 가져오기. UI 표시용.
+        /// </summary>
+        public FurnitureObject GetSelectedFurniture()
+        {
+            return selectedFurniture;
+        }
+    }
+}

@@ -1,0 +1,102 @@
+using RoomCraft.Data;
+using UnityEngine;
+
+namespace RoomCraft.Furniture
+{
+    /// <summary>
+    /// 씬에 배치된 개별 가구 오브젝트에 붙는 컴포넌트
+    /// 가구의 데이터(치수, 이름 등)를 들고 있고,
+    /// 선택/드래그/회전 시 이 컴포넌트를 통해 접근한다.
+    /// </summary>
+    public class FurnitureObject : MonoBehaviour
+    {
+        private FurnitureData data;
+        private Renderer furnitureRenderer;
+        private Color originalColor;
+        private bool isSelected = false;
+
+        /// <summary>
+        /// 가구 생성 시 호출, 데이터를 받아서 오브젝트에 적용한다.
+        /// scale를 치수에 맞게 설정하고, 색상을 입힌다.
+        /// </summary>
+        public void Initialize(FurnitureData furnitureData)
+        {
+            data = furnitureData;
+            furnitureRenderer = GetComponent<Renderer>();
+            
+            // 치수 적용 (cm -> m 변환)
+            Vector3 size = data.GetSizeInMeters();
+            transform.localScale = size;
+            
+            // 바닥에 붙이기: 피벗이 중앙이니까 높이의 절반만큼 올리면 바닥에 안착
+            transform.position = new Vector3(
+                transform.position.x,
+                size.y / 2f,
+                transform.position.z
+            );
+            
+            // 색상 적용
+            if (furnitureRenderer != null)
+            {
+                furnitureRenderer.material.color = data.color;
+                originalColor = data.color;
+            }
+
+            gameObject.name = $"Furniture_{data.furnitureName}";
+            gameObject.tag = "Furniture";
+        }
+
+        /// <summary>
+        /// 가구 데이터 변환. UI에서 치수/이름 표시할 때 사용
+        /// </summary>
+        public FurnitureData GetData()
+        {
+            return data;
+        }
+
+
+        /// <summary>
+        /// 선택 상태 표시. 색상을 밝게 해서 선택됐음을 시각적으로 알린다.
+        /// </summary>
+        public void Select()
+        {
+            isSelected = true;
+            if (furnitureRenderer != null)
+                furnitureRenderer.material.color = originalColor * 1.3f;
+        }
+
+        /// <summary>
+        /// 선택 해제. 원래 색상으로 되돌린다.
+        /// </summary>
+        public void Deselect()
+        {
+            isSelected = false;
+            if (furnitureRenderer != null)
+                furnitureRenderer.material.color = originalColor;
+        }
+
+        public bool IsSelected()
+        {
+            return isSelected;
+        }
+
+        /// <summary>
+        /// 가구 위치를 지정한 좌표로 이동.
+        /// Y값은 항상 바닥에 붙도록 높이/2 로 고정한다.
+        /// </summary>
+        public void MoveTo(Vector3 position)
+        {
+            float halfHeight = data.GetSizeInMeters().y / 2f;
+            transform.position = new Vector3(position.x, halfHeight, position.z);
+        }
+
+
+        /// <summary>
+        /// 90 도 단위로 Y축 회전
+        /// </summary>
+        public void Rotate90()
+        {
+            transform.Rotate(Vector3.up, 90f);
+        }
+    }
+}
