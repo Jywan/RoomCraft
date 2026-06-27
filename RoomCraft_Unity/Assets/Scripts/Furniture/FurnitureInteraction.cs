@@ -46,8 +46,12 @@ namespace RoomCraft.Furniture
             GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
             obj.layer = LayerMask.NameToLayer("Furniture");
             
+            // 물리 충돌 방지: Collider 제거 후 Trigger로 재추가
+            Destroy(obj.GetComponent<Collider>());
+            BoxCollider col = obj.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+            
             FurnitureObject furniture = obj.AddComponent<FurnitureObject>();
-            furniture.Initialize(data);
             
             // 생성 시 랜덤한 빈곳으로 이동
             furniture.Initialize(data);
