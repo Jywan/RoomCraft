@@ -1,5 +1,6 @@
 using RoomCraft.Data;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace RoomCraft.Furniture
 {
@@ -48,6 +49,10 @@ namespace RoomCraft.Furniture
             FurnitureObject furniture = obj.AddComponent<FurnitureObject>();
             furniture.Initialize(data);
             
+            // 생성 시 랜덤한 빈곳으로 이동
+            furniture.Initialize(data);
+            furniture.MoveTo(new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-0.5f, 0.5f)));
+            
             return furniture;
         }
         
@@ -61,6 +66,9 @@ namespace RoomCraft.Furniture
         private void HandleSelection()
         {
             if (!Input.GetMouseButtonDown(0)) return;
+            
+            // UI 위에서 클릭했으면 무시
+            if (EventSystem.current.IsPointerOverGameObject()) return;
             
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;

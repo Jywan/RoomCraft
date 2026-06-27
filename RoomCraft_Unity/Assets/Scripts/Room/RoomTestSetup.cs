@@ -49,6 +49,11 @@ namespace RoomCraft.Room
 
         private void Update()
         {
+            // UI 입력 중이면 단축키 무시
+            if (UnityEngine.EventSystems.EventSystem.current != null &&
+                UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject != null)
+                return;
+
             // T 키로 시점 전환 테스트
             if (Input.GetKeyDown(KeyCode.T))
             {
