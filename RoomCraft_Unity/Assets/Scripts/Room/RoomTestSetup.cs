@@ -22,6 +22,13 @@ namespace RoomCraft.Room
                 cam.SetTargetPoint(Vector3.zero);
             }
             
+            // 충돌 감지에 방 크기 전달
+            FurnitureBounds bounds = FindAnyObjectByType<FurnitureBounds>();
+            if (bounds != null)
+            {
+                bounds.SetRoomSize(testRoom.width, testRoom.height);
+            }
+            
             // 테스트 가구 생성
             FurnitureInteraction interaction = FindObjectOfType<FurnitureInteraction>();
             if (interaction != null)

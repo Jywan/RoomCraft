@@ -17,10 +17,13 @@ namespace RoomCraft.Furniture
         private FurnitureObject selectedFurniture = null;
         private bool isDragging = false;
         private Camera mainCamera;
+        private FurnitureBounds bounds;
+        private Vector3 lastValidPosition;                      // 마지막 유효 위치 (무효 시 되돌리기 용도!)
 
         private void Start()
         {
             mainCamera = Camera.main;
+            bounds = FindAnyObjectByType<FurnitureBounds>();
         }
         
         private void Update()
@@ -75,6 +78,7 @@ namespace RoomCraft.Furniture
                     selectedFurniture = clicked;
                     selectedFurniture.Select();
                     isDragging = true;
+                    lastValidPosition = selectedFurniture.transform.position;
                 }
                 else
                 {
@@ -94,7 +98,8 @@ namespace RoomCraft.Furniture
         /// <summary>
         /// 선택된 가구가 있고 드래그 중일 때, 마우스 위치를 바닥에 Ray로 쏴서
         /// 가구를 해당 위치로 이동시킨다.
-        /// 마우스를 떼면 드래그 종료
+        /// (추가) 이동 후 경계/겹침 검사를 수행하고, 유효하지 않은 위치면 경고 표시
+        /// (추가) 마우스를 뗐을 때 유요하지 않은 위치면 마지막 유효 위치로 되돌린다.
         /// </summary>
         private void HandleDrag()
         {
@@ -104,6 +109,13 @@ namespace RoomCraft.Furniture
             if (Input.GetMouseButtonUp(0))
             {
                 isDragging = false;
+                
+                // 최종 위치가 유효하지 않으면 마지막 유효 위치로 이동
+                if (bounds != null && !bounds.ValidatePosition(selectedFurniture))
+                {
+                    selectedFurniture.MoveTo(lastValidPosition);
+                    selectedFurniture.Select();         // 색상 복귀
+                }
                 return;
             }
             
@@ -114,6 +126,16 @@ namespace RoomCraft.Furniture
             if (Physics.Raycast(ray, out hit, 100f, floorLayer))
             {
                 selectedFurniture.MoveTo(hit.point);
+                
+                // 드래그 실시간 검증
+                if (bounds != null)
+                {
+                    bool valid = bounds.ValidatePosition(selectedFurniture);
+                    if (valid)
+                    {
+                        lastValidPosition = hit.point;
+                    }
+                }
             }
         }
         
