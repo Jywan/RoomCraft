@@ -64,6 +64,14 @@ namespace RoomCraft.Room
                 }
             }
             
+            // G 키로 그리드 스냅 토글
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                GridSnap grid = FindObjectOfType<GridSnap>();
+                if (grid != null)
+                    grid.ToggleSnap();
+            }
+            
             // S 키로 저장 테스트 
             if (Input.GetKeyDown(KeyCode.S))
             {

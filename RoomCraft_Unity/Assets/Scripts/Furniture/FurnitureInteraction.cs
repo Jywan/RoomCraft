@@ -149,7 +149,13 @@ namespace RoomCraft.Furniture
 
             if (Physics.Raycast(ray, out hit, 100f, floorLayer))
             {
-                selectedFurniture.MoveTo(hit.point);
+                // 그리드 스냅 적용
+                Vector3 targetPos = hit.point;
+                GridSnap grid = FindAnyObjectByType<GridSnap>();
+                if (grid != null)
+                    targetPos = grid.Snap(targetPos);
+                
+                selectedFurniture.MoveTo(targetPos);
                 
                 // 드래그 실시간 검증
                 if (bounds != null)
@@ -157,7 +163,7 @@ namespace RoomCraft.Furniture
                     bool valid = bounds.ValidatePosition(selectedFurniture);
                     if (valid)
                     {
-                        lastValidPosition = hit.point;
+                        lastValidPosition = targetPos;
                     }
                 }
             }
