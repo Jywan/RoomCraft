@@ -35,13 +35,14 @@ namespace RoomCraft.Furniture
         {
             Bounds bounds = furniture.GetComponent<Collider>().bounds;
 
-            float halfWidth = roomWidth / 2f;
-            float halfDepth = roomDepth / 2f;
+            float wallThickness = 0.01f;
+            float halfWidth = roomWidth / 2f - wallThickness;
+            float halfDepth = roomDepth / 2f - wallThickness;
             
             // 가구의 경계가 방 범를 벗어나는지 체크
             if (bounds.min.x < -halfWidth || bounds.max.x > halfWidth)
                 return false;
-            if (bounds.min.z < -halfWidth || bounds.max.z > halfWidth)
+            if (bounds.min.z < -halfDepth || bounds.max.z > halfDepth)
                 return false;
             
             return true;
@@ -82,13 +83,15 @@ namespace RoomCraft.Furniture
             bool insideRoom = IsInsideRoom(furniture);
             bool overlapping = IsOverlapping(furniture);
             
-            Renderer renderer = furniture.GetComponent<Renderer>();
+            Renderer renderer = furniture.GetComponentInChildren<Renderer>();
             if (renderer == null) return true;
 
             if (!insideRoom || overlapping)
             {
-                // 경고 표시: 빨간색
-                renderer.material.color = warningColor;
+                // 경고 표시: 빨간색 (자식 전체에 적용)
+                Renderer[] renderers = furniture.GetComponentsInChildren<Renderer>();
+                foreach (Renderer r in renderers)
+                    r.material.color = warningColor;
                 return false;
             }
             else

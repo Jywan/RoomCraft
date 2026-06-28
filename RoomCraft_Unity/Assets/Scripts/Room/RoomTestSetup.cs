@@ -26,7 +26,7 @@ namespace RoomCraft.Room
             FurnitureBounds bounds = FindAnyObjectByType<FurnitureBounds>();
             if (bounds != null)
             {
-                bounds.SetRoomSize(testRoom.width, testRoom.height);
+                bounds.SetRoomSize(testRoom.width, testRoom.depth);
             }
             
             // 테스트 가구 생성

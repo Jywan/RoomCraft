@@ -24,23 +24,12 @@ namespace RoomCraft.Furniture
             data = furnitureData;
             furnitureRenderer = GetComponent<Renderer>();
             
-            // 치수 적용 (cm -> m 변환)
-            Vector3 size = data.GetSizeInMeters();
-            transform.localScale = size;
-            
-            // 바닥에 붙이기: 피벗이 중앙이니까 높이의 절반만큼 올리면 바닥에 안착
-            transform.position = new Vector3(
-                transform.position.x,
-                size.y / 2f,
-                transform.position.z
-            );
-            
-            // 색상 적용
+            // 팩토리가 이미 크기/색상을 설정했으므로 여기는 이름/태그만
+            // Renderer가 없을 수 있음 - root에는 Renderer가 없고 자식에만 있음
+            if (furnitureRenderer == null)
+                furnitureRenderer = GetComponentInChildren<Renderer>();
             if (furnitureRenderer != null)
-            {
-                furnitureRenderer.material.color = data.color;
-                originalColor = data.color;
-            }
+                originalColor = furnitureRenderer.material.color;
 
             gameObject.name = $"Furniture_{data.furnitureName}";
             gameObject.tag = "Furniture";
@@ -61,8 +50,9 @@ namespace RoomCraft.Furniture
         public void Select()
         {
             isSelected = true;
-            if (furnitureRenderer != null)
-                furnitureRenderer.material.color = originalColor * 1.3f;
+            Renderer[] renderers = GetComponentsInChildren<Renderer>();
+            foreach (Renderer r in renderers)
+                r.material.color = originalColor * 1.3f;
         }
 
         /// <summary>
@@ -71,8 +61,9 @@ namespace RoomCraft.Furniture
         public void Deselect()
         {
             isSelected = false;
-            if (furnitureRenderer != null)
-                furnitureRenderer.material.color = originalColor;
+            Renderer[] renderers = GetComponentsInChildren<Renderer>();
+            foreach (Renderer r in renderers)
+                r.material.color = originalColor;
         }
 
         public bool IsSelected()
@@ -82,12 +73,10 @@ namespace RoomCraft.Furniture
 
         /// <summary>
         /// 가구 위치를 지정한 좌표로 이동.
-        /// Y값은 항상 바닥에 붙도록 높이/2 로 고정한다.
         /// </summary>
         public void MoveTo(Vector3 position)
         {
-            float halfHeight = data.GetSizeInMeters().y / 2f;
-            transform.position = new Vector3(position.x, halfHeight, position.z);
+            transform.position = new Vector3(position.x, 0f, position.z);
         }
 
 
@@ -97,6 +86,12 @@ namespace RoomCraft.Furniture
         public void Rotate90()
         {
             transform.Rotate(Vector3.up, 90f);
+        }
+        
+        private void OnDestroy()
+        {
+            Debug.Log($"OnDestroy 호출: {gameObject.name}", gameObject);
+            Debug.LogWarning(System.Environment.StackTrace);
         }
     }
 }

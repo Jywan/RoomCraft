@@ -64,7 +64,7 @@ RoomCraft_Unity/Assets/
 - [x] Phase 2-1: 가구 드래그 앤 드롭, 회전, 삭제
 - [x] Phase 2-2: 충돌 감지 (벽 밖 배치 불가, 가구 겹침 경고)
 - [x] Phase 3-1: 가구 생성 UI (카테고리/치수/이름/색상 입력)
-- [ ] Phase 3-2: 동적 모델 생성 (카테고리별 형태)
+- [x] Phase 3-2: 동적 모델 생성 (카테고리별 형태)
 - [ ] Phase 4: UI/UX 완성, 프로젝트 저장/불러오기
 - [ ] Phase 5: WebGL/모바일 빌드 배포
 
@@ -76,3 +76,12 @@ RoomCraft_Unity/Assets/
 | Rider에서 자동완성(IntelliSense) 안 됨 | Rider가 .sln 없이 파일만 열린 상태 | Unity에서 스크립트 더블클릭으로 열거나, Rider에서 `RoomCraft_Unity.sln`을 직접 Open |
 | 맥북 트랙패드에서 우클릭 드래그 불편 | 트랙패드로 우클릭 드래그가 어려움 | 좌클릭 드래그로 카메라 회전 변경 |
 | 카메라 회전 감도가 너무 낮음 | `Time.deltaTime` 곱셈으로 입력값이 지나치게 작아짐 | 고정 배수(`0.1f`)로 변경 |
+| UI 입력 중 게임 단축키 반응 | InputField 포커스 중에도 T/R키 등이 게임에 전달됨 | `EventSystem.currentSelectedGameObject` 체크로 무시 |
+| 가구 생성 시 기존 가구 사라짐 | 같은 위치에 Collider가 겹치면 물리엔진이 오브젝트를 밀어냄 | Collider를 `isTrigger`로 변경 + Queries Hit Triggers 활성화 |
+| 가구가 벽 속으로 파고듦 | IsInsideRoom에서 벽 두께 미보정 + SetRoomSize에 height 전달 | 벽 두께 보정 + depth로 수정 + 헤드보드/등받이 위치 조정 |
+
+## 추후 최적화 예정
+
+| 항목 | 내용 |
+|------|------|
+| Unity `== null` 비용 | Unity의 `== null`은 네이티브 오브젝트까지 확인하는 오버로딩 연산자라 비용이 높음. 매 프레임 호출되는 곳은 bool 플래그/캐싱으로 대체 예정 |

@@ -39,24 +39,33 @@ namespace RoomCraft.Furniture
         
         /// <summary>
         /// 새 가구를 생성해서 씬에 배치
-        /// 기본 Cube로 만들고, FurnitureObject 컴포넌트를 붙여서 초기화
+        /// 카테고리별 가구를 만들고, FurnitureObject 컴포넌트를 붙여서 초기화
         /// </summary>
         public FurnitureObject CreateFurniture(FurnitureData data)
         {
-            GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject obj = FurnitureModelFactory.Create(data);
             obj.layer = LayerMask.NameToLayer("Furniture");
             
-            // 물리 충돌 방지: Collider 제거 후 Trigger로 재추가
-            Destroy(obj.GetComponent<Collider>());
+            // 자식 파츠들도 레이어 설정
+            foreach (Transform child in obj.transform)
+            {
+                child.gameObject.layer = LayerMask.NameToLayer("Furniture");
+            }
+            
+            // 전체를 감싸는 BoxCollider 추가 (선택 드래그용)
             BoxCollider col = obj.AddComponent<BoxCollider>();
             col.isTrigger = true;
-            
-            FurnitureObject furniture = obj.AddComponent<FurnitureObject>();
+
+            // 차수 기반으로 직접 BoxCollider 크기 설정
+            Vector3 size = data.GetSizeInMeters();
+            col.center = new Vector3(0f, size.y / 2f, 0f);
+            col.size = size;
             
             // 생성 시 랜덤한 빈곳으로 이동
+            FurnitureObject furniture = obj.AddComponent<FurnitureObject>();
             furniture.Initialize(data);
             furniture.MoveTo(new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-0.5f, 0.5f)));
-            
+
             return furniture;
         }
         
@@ -80,7 +89,10 @@ namespace RoomCraft.Furniture
             if (Physics.Raycast(ray, out hit, 100f))
             {
                 FurnitureObject clicked = hit.collider.GetComponent<FurnitureObject>();
-
+                
+                if (clicked == null)
+                    clicked = hit.collider.GetComponentInParent<FurnitureObject>();
+                
                 if (clicked != null)
                 {
                     // 기존 선택 해제
