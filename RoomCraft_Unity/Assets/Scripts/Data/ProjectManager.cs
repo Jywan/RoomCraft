@@ -81,13 +81,16 @@ namespace RoomCraft.Data
     
         /// <summary>
         /// 저장된 프로젝트 파일 목록을 반환한다.
+        /// 씬 전환을 추가하여 static으로 변경
         /// </summary>
-        public string[] GetSavedProjectFiles()
+        public static string[] GetSavedProjectFiles()
         {
-            if (!Directory.Exists(saveDirectory))
-                return new string[0];
+            string dir = Path.Combine(Application.persistentDataPath, "Projects");
 
-            string[] files = Directory.GetFiles(saveDirectory, "*.json");
+            if (!Directory.Exists(dir))
+                return new string[0];
+            
+            string[] files = Directory.GetFiles(dir, "*.json");
             
             // 파일명만 추출
             for (int i = 0; i < files.Length; i++)

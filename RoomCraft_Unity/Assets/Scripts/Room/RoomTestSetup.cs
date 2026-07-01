@@ -54,7 +54,7 @@ namespace RoomCraft.Room
                 ProjectManager pm = FindAnyObjectByType<ProjectManager>();
                 if (pm != null)
                 {
-                    string[] files = pm.GetSavedProjectFiles();
+                    string[] files = ProjectManager.GetSavedProjectFiles();
                     if (files.Length > 0)
                     {
                         ProjectData project = pm.LoadProject(files[0]);

@@ -10,12 +10,15 @@ namespace RoomCraft.Room
         [SerializeField] private Material wallMaterial;
         
         private GameObject currentRoom;
+        private RoomData currentRoomData;
 
         public void BuildRoom(RoomData data)
         {
             // 기존 방 제거
             if (currentRoom != null)
                 Destroy(currentRoom);
+            
+            currentRoomData = data;
             
             currentRoom = new GameObject($"Room_{data.roomName}");
 
@@ -81,6 +84,11 @@ namespace RoomCraft.Room
         {
             if (currentRoom != null)
                 Destroy(currentRoom);
+        }
+        
+        public RoomData GetCurrentRoomData()
+        {
+            return currentRoomData;
         }
     }
 }
