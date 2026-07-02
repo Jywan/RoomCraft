@@ -81,17 +81,11 @@ namespace RoomCraft.Furniture
 
 
         /// <summary>
-        /// 90 도 단위로 Y축 회전
+        /// 지정한 각도만큼 Y축 회전
         /// </summary>
-        public void Rotate90()
+        public void RotateBy(float angle)
         {
-            transform.Rotate(Vector3.up, 90f);
-        }
-        
-        private void OnDestroy()
-        {
-            Debug.Log($"OnDestroy 호출: {gameObject.name}", gameObject);
-            Debug.LogWarning(System.Environment.StackTrace);
+            transform.Rotate(Vector3.up, angle);
         }
     }
 }

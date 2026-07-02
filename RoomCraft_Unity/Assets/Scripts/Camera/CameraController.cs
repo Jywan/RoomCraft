@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace RoomCraft.CameraSystem
 {
@@ -113,6 +114,11 @@ namespace RoomCraft.CameraSystem
             // 맥북 터치패드로 하기 힘들어서 마우스 우클릭 -> 좌클릭으로 변경
             if (Input.GetMouseButtonDown(0))
             {
+                // UI 위에서 클릭했으면 카메라 드래그 무시
+                if (EventSystem.current != null &&
+                    EventSystem.current.IsPointerOverGameObject())
+                    return;
+                
                 isDragging = true;
                 lastMousePosition = Input.mousePosition;
             }

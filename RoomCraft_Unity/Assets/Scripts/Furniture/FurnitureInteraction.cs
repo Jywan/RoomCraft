@@ -173,16 +173,32 @@ namespace RoomCraft.Furniture
         // ===== 회전 =====
 
         /// <summary>
-        /// R키를 누르면 선택된 가구를 90도 회전시킨다
+        /// R 또는 E 키를 누르면 가구를 +45도 회전
+        /// Q를 누르면 -45도 회전
         /// </summary>
         private void HandleRotation()
         {
             if (selectedFurniture == null) return;
 
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Input.GetKeyDown(KeyCode.R) || Input.GetKeyDown(KeyCode.E))
             {
-                selectedFurniture.Rotate90();
+                RotateSelected(45f);
             }
+
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                RotateSelected(-45f);
+            }
+        }
+    
+        
+        /// <summary>
+        /// 선택된 가구를 지정 각도만큼 회전 (외부 호출용)
+        /// </summary>
+        public void RotateSelected(float angle)
+        {
+            if (selectedFurniture == null) return;
+            selectedFurniture.RotateBy(angle);
         }
         
         
@@ -197,9 +213,15 @@ namespace RoomCraft.Furniture
 
             if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace))
             {
-                Destroy(selectedFurniture.gameObject);
-                selectedFurniture = null;
+                DeleteSelected();
             }
+        }
+
+        public void DeleteSelected()
+        {
+            if (selectedFurniture == null) return;
+            Destroy(selectedFurniture.gameObject);
+            selectedFurniture = null;
         }
         
         

@@ -12,8 +12,8 @@ namespace RoomCraft.UI
     /// </summary>
     public class EditorSaveUI : MonoBehaviour
     {
-        [Header("Main")] 
-        [SerializeField] private Button saveButton;
+        // [Header("Main")] 
+        // [SerializeField] private Button saveButton;
         
         
         [Header("Save panel")]
@@ -29,11 +29,11 @@ namespace RoomCraft.UI
         private void Start()
         {
             savePanel.SetActive(false);
-            
+            confirmSaveButton.onClick.AddListener(OnConfirmSave);
+            cancelSaveButton.onClick.AddListener(CloseSavePanel);
         }
-
-
-        private void OpenSavePanel()
+            
+        public void OpenSavePanel()
         {
             savePanel.SetActive(true);
             saveNameInput.text = "";
