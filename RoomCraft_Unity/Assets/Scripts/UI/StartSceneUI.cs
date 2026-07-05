@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RoomCraft.Data;
 using TMPro;
 using UnityEngine;
@@ -22,6 +23,7 @@ namespace RoomCraft.UI
         [SerializeField] private TMP_InputField widthInput;
         [SerializeField] private TMP_InputField depthInput;
         [SerializeField] private TMP_InputField heightInput;
+        [SerializeField] private TMP_Dropdown shapeDropdown;
         [SerializeField] private Button confirmNewButton;
         [SerializeField] private Button cancelNewButton;
         
@@ -41,6 +43,14 @@ namespace RoomCraft.UI
             confirmNewButton.onClick.AddListener(OnConfirmNewProject);
             cancelNewButton.onClick.AddListener(CloseNewProjectPanel);
             cancelLoadButton.onClick.AddListener(CloseLoadPanel);
+            
+            SetupShapeDropdown();
+        }
+
+        private void SetupShapeDropdown()
+        {
+            shapeDropdown.ClearOptions();
+            shapeDropdown.AddOptions(new List<string> {"사각형", "L자형"});
         }
         
         
@@ -53,6 +63,7 @@ namespace RoomCraft.UI
             widthInput.text = "";
             depthInput.text = "";
             heightInput.text = "";
+            shapeDropdown.value = 0;
         }
         
         private void CloseNewProjectPanel()
@@ -69,8 +80,9 @@ namespace RoomCraft.UI
             float width = ParseFloat(widthInput.text, 4f);
             float depth = ParseFloat(depthInput.text, 3f);
             float height = ParseFloat(heightInput.text, 2.5f);
+            RoomShape shape = (RoomShape)shapeDropdown.value;
             
-            SessionData.SetNewProject(roomName, width, depth, height);
+            SessionData.SetNewProject(roomName, width, depth, height, shape);
             SceneManager.LoadScene("EditorScene");
         }
         

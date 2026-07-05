@@ -77,6 +77,30 @@ namespace RoomCraft.Room
             
             return indices;
         }
+        
+        
+        /// <summary>
+        /// 점이 다각형 내부에 있는지 판정 (Ray Casting)
+        /// </summary>
+        public static bool PointInPolygon(Vector2 point, List<Vector2> polygon)
+        {
+            bool inside = false;
+            int n = polygon.Count;
+
+            for (int i = 0, j = n - 1; i < n; j = i++)
+            {
+                Vector2 pi = polygon[i];
+                Vector2 pj = polygon[j];
+                
+                // 판정 로직
+                bool intersects = ((pi.y > point.y) != (pj.y > point.y)) &&
+                                  (point.x < (pj.x - pi.x) * (point.y - pi.y) / (pj.y - pi.y) + pi.x);
+                
+                if (intersects)
+                    inside = !inside;
+            }
+            return inside;
+        }
 
         private static float SignedArea(List<Vector2> pts)
         {

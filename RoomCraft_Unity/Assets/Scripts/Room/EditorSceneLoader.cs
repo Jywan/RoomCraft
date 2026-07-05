@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RoomCraft.CameraSystem;
 using RoomCraft.Data;
 using RoomCraft.Furniture;
@@ -10,6 +11,7 @@ namespace RoomCraft.Room
     /// EditorScene 진입 시 SessionData를 읽어서
     /// 새 프로젝트면 방 생성, 불러오기면 프로젝트 복원
     /// RoomManager 오브젝트에 부착
+    /// 다각형 룸 로직 부착적용완료
     /// </summary>
     public class EditorSceneLoader : MonoBehaviour
     {
@@ -31,11 +33,9 @@ namespace RoomCraft.Room
 
         private void HandleNewProject()
         {
-            RoomData roomData = new RoomData(
-                SessionData.RoomWidth,
-                SessionData.RoomDepth,
-                SessionData.RoomHeight,
-                SessionData.RoomName);
+            List<Vector2> vertices =
+                RoomShapePresets.GetVertices(SessionData.RoomShape, SessionData.RoomWidth, SessionData.RoomDepth);
+            RoomData roomData = new RoomData(vertices, SessionData.RoomHeight, SessionData.RoomName);
             
             roomBuilder.BuildRoom(roomData);
             UpdateFurnitureBounds(roomData);
@@ -85,7 +85,7 @@ namespace RoomCraft.Room
             FurnitureBounds bounds = FindAnyObjectByType<FurnitureBounds>();
             
             if (bounds != null)
-                bounds.SetRoomSize(roomData.width, roomData.depth);
+                bounds.SetRoomShape(roomData.GetVertices());
         }
     }
 }

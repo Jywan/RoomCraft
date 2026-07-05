@@ -20,6 +20,7 @@ namespace RoomCraft.Data
         public static float RoomWidth { get; set; }
         public static float RoomDepth { get; set; }
         public static float RoomHeight { get; set; }
+        public static RoomShape RoomShape { get; set; }
         
         // 불러오기일 때 사용
         public static string LoadFileName { get; set; }
@@ -28,13 +29,14 @@ namespace RoomCraft.Data
         /// <summary>
         /// 새 프로젝트 모드로 설정
         /// </summary>
-        public static void SetNewProject(string name, float width, float depth, float height)
+        public static void SetNewProject(string name, float width, float depth, float height, RoomShape shape)
         {
             CurrentMode = Mode.NewProject;
             RoomName = name;
             RoomWidth = width;
             RoomDepth = depth;
             RoomHeight = height;
+            RoomShape = shape;
             LoadFileName = null;
         }
 

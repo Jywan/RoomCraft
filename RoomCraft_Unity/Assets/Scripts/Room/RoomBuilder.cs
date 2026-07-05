@@ -59,7 +59,7 @@ namespace RoomCraft.Room
 
             GameObject floor = new GameObject("Floor");
             floor.transform.parent = currentRoom.transform;
-            floor.transform.localPosition = new  Vector3(0f, -0.01f, 0f);
+            floor.transform.localPosition = new Vector3(0f, -0.01f, 0f);
 
             floor.AddComponent<MeshFilter>().mesh = mesh;
             MeshRenderer renderer = floor.AddComponent<MeshRenderer>();

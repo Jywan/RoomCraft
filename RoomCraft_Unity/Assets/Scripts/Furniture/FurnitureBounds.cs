@@ -1,49 +1,58 @@
+using System.Collections.Generic;
+using RoomCraft.Room;
 using UnityEngine;
 
 namespace RoomCraft.Furniture
 {
     /// <summary>
-    /// 가구 배치 시 병계검사를 담당하는 유틸리티 클래스.
+    /// 가구 배치 시 경계검사를 담당하는 유틸리티 클래스.
     /// 방 범위를 벗어났는지, 다른 가구와 겹치는지 체크한다.
+    /// 다각형 추가 로직 추가로 내부 로직 수정 진행
     /// FurnitureInteraction에서 드래그 중에 호출한다.
     /// </summary>
     public class FurnitureBounds : MonoBehaviour
     {
         [Header("Room Bounds")] 
-        [SerializeField] private float roomWidth = 4f;  // 방 가로 (m)
-        [SerializeField] private float roomDepth = 3f;  // 방 세로 (m)\
+        [SerializeField] private float wallTickness = 0.01f;
 
-        [Header("Visual Feedback")] [SerializeField]
-        private Color warningColor = new Color(1f, 0.3f, 0.3f, 0.8f);
+        [Header("Visual Feedback")]
+        [SerializeField] private Color warningColor = new Color(1f, 0.3f, 0.3f, 0.8f);
+
+        private List<Vector2> roomOutLine;
         
         
         /// <summary>
-        /// 방 크기를 설정한다. RoomBuilder에서 방 생성 후 호출
+        /// 방의 실제 꼭짓점(다각형)을 설정, RoomBuilder에서 방 생성 후 호출
         /// </summary>
-        public void SetRoomSize(float width, float depth)
-        { 
-            roomWidth = width;
-            roomDepth = depth;
+        public void SetRoomShape(List<Vector2> vertices)
+        {
+            roomOutLine = GetInsetPolygon(vertices, wallTickness);
         }
 
         
         /// <summary>
-        /// 가구가 방 경계밖에 있는지 검사
-        /// 가구의 Collider bounds를 기준으로 방의 가로/세로 범위를 벗아나면 false. 
+        /// 가구가 방 경계(다각형) 밖에 있는지 검사
+        /// 가구 바운딩 박스의 네 모서리가 전부 다각형 안에 있어야 유효 
         /// </summary>
         public bool IsInsideRoom(FurnitureObject furniture)
         {
+            if (roomOutLine == null) return true;
+            
             Bounds bounds = furniture.GetComponent<Collider>().bounds;
 
-            float wallThickness = 0.01f;
-            float halfWidth = roomWidth / 2f - wallThickness;
-            float halfDepth = roomDepth / 2f - wallThickness;
-            
-            // 가구의 경계가 방 범를 벗어나는지 체크
-            if (bounds.min.x < -halfWidth || bounds.max.x > halfWidth)
-                return false;
-            if (bounds.min.z < -halfDepth || bounds.max.z > halfDepth)
-                return false;
+            Vector2[] corners =
+            {
+                new Vector2(bounds.min.x, bounds.min.z),
+                new Vector2(bounds.max.x, bounds.min.z),
+                new Vector2(bounds.max.x, bounds.max.z),
+                new Vector2(bounds.min.x, bounds.max.z),
+            };
+
+            foreach (Vector2 corner in corners)
+            {
+                if (!PolygonUtils.PointInPolygon(corner, roomOutLine))
+                    return false;
+            }
             
             return true;
         }
@@ -73,6 +82,7 @@ namespace RoomCraft.Furniture
             return false;
         }
 
+        
         /// <summary>
         /// 종합 검사: 방 밖이거나 겹치면 경고 색상 적용, 정상이면 원래 색으로 복귀
         /// 드래그 중 매 프레임 호출
@@ -100,6 +110,27 @@ namespace RoomCraft.Furniture
                 furniture.Select();         // Select()가 밝은 색으로 만들어줌
                 return true;
             }
+        }
+        
+        
+        /// <summary>
+        /// 다각형을 중심점 기준으로 살짝 안쪽으로 축소 (벽 두께 보정용)
+        /// </summary>
+        private List<Vector2> GetInsetPolygon(List<Vector2> polygon, float inset)
+        {
+            Vector2 centroid = Vector2.zero;
+            foreach (Vector2 v in polygon)
+                centroid += v;
+            centroid /= polygon.Count;
+
+            List<Vector2> result = new List<Vector2>();
+            foreach (Vector2 v in polygon)
+            {
+                Vector2 dir = (v - centroid).normalized;
+                result.Add(v - dir * inset);
+            }
+            
+            return result;
         }
     }
 }
