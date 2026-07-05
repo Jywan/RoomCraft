@@ -2,6 +2,7 @@ using RoomCraft.Data;
 using RoomCraft.Furniture;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace RoomCraft.UI
 {
@@ -54,6 +55,8 @@ namespace RoomCraft.UI
             
             Vector3 pos = furniture.transform.position;
             posText.text = $"위치: ({pos.x:F2}, {pos.z:F2})";
+            
+            LayoutRebuilder.ForceRebuildLayoutImmediate(panel.GetComponent<RectTransform>());
         }
         
 

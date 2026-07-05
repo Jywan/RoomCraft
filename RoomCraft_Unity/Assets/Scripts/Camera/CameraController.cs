@@ -33,6 +33,9 @@ namespace RoomCraft.CameraSystem
         [SerializeField] private float minVerticalAngle = -10f;
         [SerializeField] private float maxVerticalAngle = 80f;
         
+        [Header("Furniture Interaction")]
+        [SerializeField] private LayerMask furnitureLayer;
+        
         private CameraMode currentMode = CameraMode.TopView;
         private float horizontalAngle = 0f;
         private float verticalAngle = 45f;
@@ -117,6 +120,10 @@ namespace RoomCraft.CameraSystem
                 // UI 위에서 클릭했으면 카메라 드래그 무시
                 if (EventSystem.current != null &&
                     EventSystem.current.IsPointerOverGameObject())
+                    return;
+                
+                // 가구 뤼에서 클릭했으면 카메라 드래그 무시 (가구이동과 겹치지 않게)
+                if (IsPointerOverFurniture())
                     return;
                 
                 isDragging = true;
@@ -279,6 +286,16 @@ namespace RoomCraft.CameraSystem
                 distance = Mathf.Clamp(distance, minDistance, maxDistance);
                 ApplyFreeView();
             }
+        }
+        
+        
+        /// <summary>
+        /// 마우스 아래에 가구가 있는지 확인한다.
+        /// </summary>
+        private bool IsPointerOverFurniture()
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            return Physics.Raycast(ray, 100f, furnitureLayer);
         }
     }
 }

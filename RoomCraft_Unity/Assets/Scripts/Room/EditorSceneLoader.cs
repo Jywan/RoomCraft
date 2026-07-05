@@ -38,6 +38,7 @@ namespace RoomCraft.Room
                 SessionData.RoomName);
             
             roomBuilder.BuildRoom(roomData);
+            UpdateFurnitureBounds(roomData);
             
             CameraController cam = FindAnyObjectByType<CameraController>();
             if (cam != null)
@@ -62,6 +63,7 @@ namespace RoomCraft.Room
             if (project.roomData != null)
             {
                 roomBuilder.BuildRoom(project.roomData);
+                UpdateFurnitureBounds(project.roomData);
             }
             
             // 저장된 가구 복원
@@ -72,6 +74,18 @@ namespace RoomCraft.Room
                 furniture.MoveTo(new Vector3(save.posX, 0f, save.posZ));
                 furniture.transform.rotation = Quaternion.Euler(0f, save.rotationY, 0f);
             }
+        }
+        
+        
+        /// <summary>
+        /// 방 생성/복원 직 후 FurnitureBounds에 실제 방 크기를 반영
+        /// </summary>
+        private void UpdateFurnitureBounds(RoomData roomData)
+        {
+            FurnitureBounds bounds = FindAnyObjectByType<FurnitureBounds>();
+            
+            if (bounds != null)
+                bounds.SetRoomSize(roomData.width, roomData.depth);
         }
     }
 }

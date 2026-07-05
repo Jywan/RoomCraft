@@ -200,6 +200,16 @@ namespace RoomCraft.Furniture
             if (selectedFurniture == null) return;
             selectedFurniture.RotateBy(angle);
         }
+
+
+        /// <summary>
+        /// 선택된 가구를 지정한 절대 각도로 회전 (외부 호출용, 회전 슬라이더 등)
+        /// </summary>
+        public void SetSelectedRotation(float angleY)
+        {
+            if (selectedFurniture == null) return;
+            selectedFurniture.SetRotationY(angleY);
+        }
         
         
         // ===== 삭제 =====

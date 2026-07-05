@@ -87,5 +87,23 @@ namespace RoomCraft.Furniture
         {
             transform.Rotate(Vector3.up, angle);
         }
+        
+        
+        /// <summary>
+        ///  Y축 회전을 절대각으로 지정 (0 ~ 360)
+        /// </summary>
+        public void SetRotationY(float angleY)
+        {
+            transform.rotation = Quaternion.Euler(0f, angleY, 0f);
+        }
+        
+        
+        /// <summary>
+        /// 현재 Y축 회전각 반환 (0 ~ 360)
+        /// </summary>
+        public float GetRotationY()
+        {
+            return transform.eulerAngles.y;
+        }
     }
 }

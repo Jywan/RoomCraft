@@ -21,20 +21,19 @@ namespace RoomCraft.UI
         [Header("References")]
         [SerializeField] private FurnitureInteraction furnitureInteraction;
         
-        [Header("Position")]
-        [SerializeField] private float heightOffset = 0.3f;
+        [Header("Preview")]
+        [SerializeField] private Image previewImage;
+        [SerializeField] private Sprite[] categoryIcons;              // FurnitureCategory enum 순서와 동일하게 9개로 지정
         
-        private RectTransform panelRect;
-        private Camera mainCamera;
-
+        [Header("Rotation")]
+        [SerializeField] private Slider rotationSlider;
+        
         private void Start()
         {
             rotateLeftButton.onClick.AddListener(OnRotateLeft);
             rotateRightButton.onClick.AddListener(OnRotateRight);
             deleteButton.onClick.AddListener(OnDelete);
-            
-            panelRect = panel.GetComponent<RectTransform>();
-            mainCamera = Camera.main;
+            rotationSlider.onValueChanged.AddListener(OnRotationSliderChanged);
             
             panel.SetActive(false);
         }
@@ -43,25 +42,15 @@ namespace RoomCraft.UI
         {
             FurnitureObject selected =
                 furnitureInteraction != null ? furnitureInteraction.GetSelectedFurniture() : null;
-            if (selected == null)
+    
+            bool hasSelection = selected != null;
+            panel.SetActive(hasSelection);
+    
+            if (hasSelection)
             {
-                panel.SetActive(false);
-                return;
+                UpdatePreview(selected);
+                rotationSlider.SetValueWithoutNotify(selected.GetRotationY());
             }
-            
-            panel.SetActive(true);
-            UpdatePanelPosition(selected);
-        }
-        
-        
-        /// <summary>
-        /// 선택된 가구 위쪽 화면 좌표로 패널 위치를 갱신한다.
-        /// </summary>
-        private void UpdatePanelPosition(FurnitureObject selected)
-        {
-            float heightM = selected.GetData().heightCm / 100f;
-            Vector3 worldPos = selected.transform.position + Vector3.up * (heightM + heightOffset);
-            panelRect.position = mainCamera.WorldToScreenPoint(worldPos);
         }
         
         private void OnRotateLeft()
@@ -80,6 +69,22 @@ namespace RoomCraft.UI
         {
             if (furnitureInteraction != null)
                 furnitureInteraction.DeleteSelected();
+        }
+        
+        /// <summary>
+        /// 선택된 가구의 카테고리에 맞는 아이콘을 미리보기에 표시
+        /// </summary>
+        private void UpdatePreview(FurnitureObject selected)
+        {
+            int index = (int)selected.GetData().category;
+            if (categoryIcons == null || index < 0 || index >= categoryIcons.Length) return;
+            previewImage.sprite = categoryIcons[index];
+        }
+        
+        private void OnRotationSliderChanged(float angleY)
+        {
+            if (furnitureInteraction != null)
+                furnitureInteraction.SetSelectedRotation(angleY);
         }
     }
 }
