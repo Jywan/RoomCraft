@@ -29,6 +29,9 @@ namespace RoomCraft.UI
         [Header("Color Buttons")]
         [SerializeField] private Button[] colorButtons;                     // 색상 선택 버튼들
         
+        [Header("Color Picker")]
+        [SerializeField] private ColorPickerUI colorPicker;
+        
         [Header("References")]
         [SerializeField] private FurnitureInteraction furnitureInteraction;
         
@@ -48,6 +51,9 @@ namespace RoomCraft.UI
             
             // 색상 버튼 이벤트 연결
             SetupColorButtons();
+            
+            // 색상 피커 이벤트 연결
+            colorPicker.OnColorChanged += SelectColor;
             
             // 시작 시 패널 숨김
             panel.SetActive(false);
@@ -157,6 +163,7 @@ namespace RoomCraft.UI
             selectedColor = Color.white;
             if (colorPreview != null)
                 colorPreview.color = Color.white;
+            colorPicker.SetColor(Color.white);
         }
     }
 }

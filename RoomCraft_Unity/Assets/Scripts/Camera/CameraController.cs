@@ -27,7 +27,7 @@ namespace RoomCraft.CameraSystem
         [SerializeField] private float minDistance = 3;
         [SerializeField] private float maxDistance = 20f;
         [SerializeField] private float rotationSpeed = 5f;
-        [SerializeField] private float zoomSpeed = 2f;
+        [SerializeField] private float zoomSpeed = 5f;
         
         [Header("Angle Limits")]
         [SerializeField] private float minVerticalAngle = -10f;
@@ -259,6 +259,26 @@ namespace RoomCraft.CameraSystem
             else 
                 ApplyFreeView();
         }
+
         
+        /// <summary>
+        /// 외부에서 호출: 줌 인/아웃
+        /// amount 양수면 줌 인, 음수면 줌 아웃
+        /// </summary>
+        public void Zoom(float amount)
+        {
+            if (currentMode == CameraMode.TopView)
+            {
+                topViewHeight -= amount * zoomSpeed;
+                topViewHeight = Mathf.Clamp(topViewHeight, minDistance, maxDistance);
+                ApplyTopView();
+            }
+            else
+            {
+                distance -= amount * zoomSpeed;
+                distance = Mathf.Clamp(distance, minDistance, maxDistance);
+                ApplyFreeView();
+            }
+        }
     }
 }
