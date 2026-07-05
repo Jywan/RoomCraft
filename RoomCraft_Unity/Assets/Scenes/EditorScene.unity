@@ -11403,8 +11403,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4055d606201bd4e518ea957355320a08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomCraft.Room.RoomBuilder
-  floorMaterial: {fileID: 0}
-  wallMaterial: {fileID: 0}
+  floorMaterial: {fileID: 2100000, guid: 282b93b67e90a4f619c771f5435414c5, type: 2}
+  wallMaterial: {fileID: 2100000, guid: 8c735012d24d94e3ebf0ecc80b6f9212, type: 2}
 --- !u!4 &2018665068
 Transform:
   m_ObjectHideFlags: 0

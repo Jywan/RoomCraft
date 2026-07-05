@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RoomCraft.Data;
 using UnityEngine;
 
@@ -22,57 +23,84 @@ namespace RoomCraft.Room
             
             currentRoom = new GameObject($"Room_{data.roomName}");
 
-            CreateFloor(data);
-            CreateWalls(data);
+            List<Vector2> outline = data.GetVertices();
+            
+            CreateFloor(data, outline);
+            CreateWalls(data, outline);
         }
-
-        private void CreateFloor(RoomData data)
+        
+        /// <summary>
+        /// 다각형 외곽선을 삼각분할해서 바닥 메쉬를 생성!
+        /// </summary>
+        private void CreateFloor(RoomData data, List<Vector2> outline)
         {
-            GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            floor.name = "Floor";
+            List<int> triangles = PolygonUtils.Triangulate(outline);
+
+            // (x, y) 평면 삼각형을 (x, 0, y)로 매핑하면 법선이 아래를 향해서, 각 삼각형의 마지막 두 인덱스를 뒤집어 위를 향하게 한다
+            for (int i = 0; i + 2 < triangles.Count; i += 3)
+            {
+                (triangles[i + 1], triangles[i + 2]) = (triangles[i + 2], triangles[i + 1]);
+            }
+
+            Vector3[] vertices3D = new Vector3[outline.Count];
+            Vector2[] uvs = new Vector2[outline.Count];
+            for (int i = 0; i < outline.Count; i++)
+            {
+                vertices3D[i] = new Vector3(outline[i].x, 0f, outline[i].y);
+                uvs[i] = outline[i];
+            }
+
+            Mesh mesh = new Mesh();
+            mesh.vertices = vertices3D;
+            mesh.uv = uvs;
+            mesh.triangles = triangles.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
+            GameObject floor = new GameObject("Floor");
             floor.transform.parent = currentRoom.transform;
-            
-            // 바닥 : 가로 x 세로, 두께 0.1m
-            floor.transform.localScale = new Vector3(data.width, 0.1f, data.depth);
-            floor.transform.localPosition = new Vector3(0f, -0.05f, 0f);
-            
+            floor.transform.localPosition = new  Vector3(0f, -0.01f, 0f);
+
+            floor.AddComponent<MeshFilter>().mesh = mesh;
+            MeshRenderer renderer = floor.AddComponent<MeshRenderer>();
             if (floorMaterial != null)
-                floor.GetComponent<Renderer>().material = floorMaterial;
+                renderer.material = floorMaterial;
+
+            floor.AddComponent<MeshCollider>().sharedMesh = mesh;
 
             floor.layer = LayerMask.NameToLayer("Default");
             floor.tag = "Floor";
         }
-
-        private void CreateWalls(RoomData data)
+        
+        /// <summary>
+        /// 외곽선 꼭짓점을 순회하면서 각 변마다 벽 하나씩 생성
+        /// </summary>
+        private void CreateWalls(RoomData data, List<Vector2> outline)
         {
             float wallThickness = 0.1f;
-            
-            // 벽 4면 생성: 앞, 뒤, 좌, 우
-            CreateWall("Wall_Back", data,
-                new Vector3(0f, data.height / 2f, data.depth / 2f),
-                new Vector3(data.width, data.height, wallThickness));
-            
-            CreateWall("Wall_Front", data,
-                new Vector3(0f, data.height / 2f, -data.depth / 2f),
-                new Vector3(data.width, data.height, wallThickness));
-            
-            CreateWall("Wall_Left", data,
-                new Vector3(-data.width / 2f, data.height / 2f, 0f),
-                new Vector3(wallThickness, data.height, data.depth));
-            
-            CreateWall("Wall_Right", data,
-                new Vector3(data.width / 2f, data.height / 2f, 0f),
-                new Vector3(wallThickness, data.height, data.depth));
-
+            for (int i = 0; i < outline.Count; i++)
+            {
+                Vector2 start = outline[i];
+                Vector2 end = outline[(i + 1) % outline.Count];
+                CreateWallSegment($"Wall_{i}", data, start, end, wallThickness);
+            }
         }
-
-        private void CreateWall(string name, RoomData data, Vector3 position, Vector3 scale)
+        
+        private void CreateWallSegment(string name, RoomData data, Vector2 start, Vector2 end, float wallThickness)
         {
+            Vector2 mid = (start + end) / 2f;
+            float length = Vector2.Distance(start, end);
+            
+            float dx = end.x - start.x;
+            float dz = end.y - start.y;
+            float angle = Mathf.Atan2(-dz, dx) * Mathf.Rad2Deg;
+            
             GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
             wall.name = name;
             wall.transform.parent = currentRoom.transform;
-            wall.transform.localPosition = position;
-            wall.transform.localScale = scale;
+            wall.transform.localPosition = new Vector3(mid.x, data.height / 2f, mid.y);
+            wall.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+            wall.transform.localScale = new Vector3(length, data.height, wallThickness);
             
             if (wallMaterial != null)
                 wall.GetComponent<Renderer>().material = wallMaterial;
