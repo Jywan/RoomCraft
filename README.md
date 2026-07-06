@@ -39,13 +39,15 @@
 | T 키 | 탑뷰 ↔ 3D 뷰 전환 |
 | 좌클릭 드래그 (3D 뷰) | 카메라 회전 |
 | 스크롤 (트랙패드 두 손가락) | 줌 인/아웃 |
-| R 키 | 선택된 가구 90도 회전 |
+| Q 키 | 선택된 가구 -45도 회전 |
+| E / R 키 | 선택된 가구 +45도 회전 |
 | Delete / Backspace | 선택된 가구 삭제 |
 | G 키 | 그리드 스냅 ON/OFF 토글 |
-| S 키 | 프로젝트 저장 |
-| L 키 | 프로젝트 불러오기 |
 
 ## 프로젝트 구조
+
+<details>
+<summary>펼치기</summary>
 
 ```
 RoomCraft_Unity/Assets/
@@ -62,7 +64,12 @@ RoomCraft_Unity/Assets/
 └── Settings/
 ```
 
+</details>
+
 ## 개발 진행 상황
+
+<details>
+<summary>펼치기</summary>
 
 - [x] Phase 1-1: 방 생성 시스템 (바닥 + 벽)
 - [x] Phase 1-2: 카메라 시스템 (탑뷰 ↔ 3D 전환, 줌)
@@ -73,11 +80,20 @@ RoomCraft_Unity/Assets/
 - [x] Phase 4-1: 프로젝트 저장/불러오기 (JSON 직렬화)
 - [x] Phase 4-2: 그리드 스냅 + 치수 표시
 - [x] Phase 4-3: 방 커스터마이징 UI (방 크기 입력)
-- [ ] Phase 4-4: 저장/불러오기 UI (파일 목록 선택)
-- [ ] Phase 5: WebGL/모바일 빌드 배포
-- [ ] Phase 6: L자/다각형 방 지원 (꼭짓점 기반 벽 생성)
+- [x] Phase 4-4: 씬 분리 구조 (StartScene + EditorScene, 저장/불러오기 UI, 에디터 툴바)
+- [x] Phase 4-5: 룸/가구 툴바 분리 + 색상 피커 (원형 휠 + RGB 직접 입력)
+- [x] Phase 4-6: 가구 정보 패널 통합 (치수/미리보기/회전 슬라이더) + 버그 수정
+- [x] Phase 5-1: 다각형 기반 방 생성 (꼭짓점 리스트로 바닥/벽 생성)
+- [x] Phase 5-2: 프리셋 방 모양 선택 (사각형/L자형 등)
+- [ ] Phase 5-3: 커스텀 방 모양 편집 (꼭짓점 직접 배치)
+- [ ] Phase 6: WebGL/모바일 빌드 배포
+
+</details>
 
 ## 개발 중 이슈 & 해결
+
+<details>
+<summary>펼치기</summary>
 
 | 이슈 | 원인 | 해결 |
 |------|------|------|
@@ -88,10 +104,25 @@ RoomCraft_Unity/Assets/
 | UI 입력 중 게임 단축키 반응 | InputField 포커스 중에도 T/R키 등이 게임에 전달됨 | `EventSystem.currentSelectedGameObject` 체크로 무시 |
 | 가구 생성 시 기존 가구 사라짐 | 같은 위치에 Collider가 겹치면 물리엔진이 오브젝트를 밀어냄 | Collider를 `isTrigger`로 변경 + Queries Hit Triggers 활성화 |
 | 가구가 벽 속으로 파고듦 | IsInsideRoom에서 벽 두께 미보정 + SetRoomSize에 height 전달 | 벽 두께 보정 + depth로 수정 + 헤드보드/등받이 위치 조정 |
+| Layout Group 중첩 시 자식 배치가 깨짐 | Horizontal/Vertical Layout Group은 자식을 "배치"만 하지, 자기 자신의 크기를 내용물에 맞춰 키워주진 않음 | Layout Group이 붙은 컨테이너가 또 다른 Layout Group의 자식이면, Content Size Fitter(Preferred Size)를 같이 붙여야 함 |
+| Slider의 Direction 필드가 안 보임 | Handle Rect가 비어있으면 Unity가 Direction/Min/Max 필드를 숨김 | Handle Rect에 실제 Handle 오브젝트 연결 |
+| Slider Handle의 Rect Transform 앵커를 못 건드림 | Handle Rect로 지정된 오브젝트는 Slider가 앵커 전체를 driven 상태로 잠금 | 부모(Handle Slide Area)의 크기를 대신 조절해서 우회 |
+| 스크립트 리네임 후 씬 연결이 끊길 뻔함 | Finder 등에서 파일명만 바꾸면 `.meta`의 GUID 매칭이 깨짐 | 반드시 Unity 프로젝트 창 안에서 Rename |
+| 방 크기를 바꿔도 가구가 예전 경계 기준으로 빨개짐 | `FurnitureBounds.SetRoomSize()`가 어디서도 호출되지 않아서 인스펙터 기본값(4×3)으로 계속 검사됨 | `EditorSceneLoader`가 방 생성/복원 직후 `SetRoomSize()` 호출하도록 수정 |
+| 3D 뷰에서 가구 드래그 시 카메라도 같이 회전 | `CameraController`가 좌클릭을 UI 위 클릭인지만 체크하고, 가구(3D 오브젝트) 클릭인지는 체크 안 함 | 드래그 시작 전 Furniture 레이어로 Raycast해서 가구 위 클릭이면 카메라 드래그 무시 |
+| 가구 선택 즉시 정보 텍스트가 한 프레임 안 보임 | `Content Size Fitter`가 텍스트 반영 전 크기를 계산해서 0으로 나옴 | 텍스트 설정 직후 `LayoutRebuilder.ForceRebuildLayoutImmediate()` 호출 |
+| `PolygonUtils.cs`에서 `.x`/`.y` 컴파일 에러 | `using System.Numerics;`로 잘못 임포트되어 `Vector2`가 Unity 타입이 아닌 .NET 타입(필드명 `X`/`Y`)으로 잡힘 | `using UnityEngine;`으로 수정 |
+| 다각형 바닥이 마젠타(핑크)로 보임 | `Floor Material`/`Wall Material`이 애초에 할당 안 되어 있었는데, 기존엔 `CreatePrimitive`가 자동으로 기본 머티리얼을 붙여줘서 안 드러났음. 커스텀 Mesh 방식은 그 자동 할당이 없어서 "머티리얼 없음"이 그대로 드러남 | URP Lit 머티리얼 새로 만들어서 `Floor Material`/`Wall Material`에 연결 |
+| 바닥과 가구가 겹치는 부분에서 깜빡임(Z-파이팅) | 바닥 메쉬와 가구 밑면이 둘 다 Y=0에 정확히 겹쳐서 렌더링 순서가 매 프레임 흔들림 | 바닥을 Y=-0.01로 살짝 내려서 겹침 회피 |
+| TMP Dropdown 목록 글자만 한글 깨짐 | Dropdown의 Template(펼침 목록) 쪽 Item Label이 한글 미지원 기본 폰트를 사용 | Item Label의 Font Asset을 NotoSansKR-Regular SDF로 교체 |
+| 방 모양 Dropdown이 계속 기본값(Option A/B/C)으로 보임 | `SetupShapeDropdown()`을 작성만 하고 `Start()`에서 호출을 안 함 | `Start()`에 호출 추가 |
+| 방 모양 정보 없을 때 가구가 항상 경계 밖으로 판정됨 | `FurnitureBounds.IsInsideRoom()`이 `roomOutline == null`일 때 `false`를 반환(의도는 `true`) | `true`로 수정 |
+
+</details>
 
 ## 추후 최적화 예정
 
 | 항목 | 내용 |
 |------|------|
 | Unity `== null` 비용 | Unity의 `== null`은 네이티브 오브젝트까지 확인하는 오버로딩 연산자라 비용이 높음. 매 프레임 호출되는 곳은 bool 플래그/캐싱으로 대체 예정 |
-| 저장/불러오기 UI | 현재 S/L 키로 테스트 중. 추후 저장 파일 목록 UI + 선택해서 불러오기 기능 추가 예정 |
+| 저장/불러오기 UI | EditorToolbar의 저장 버튼 → EditorSaveUI 팝업으로 동작. 불러오기는 StartScene에서 처리 |
