@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using UnityEngine;
+
 namespace RoomCraft.Data
 {
     
@@ -21,6 +24,7 @@ namespace RoomCraft.Data
         public static float RoomDepth { get; set; }
         public static float RoomHeight { get; set; }
         public static RoomShape RoomShape { get; set; }
+        public static List<Vector2> CustomVertices { get; set; }
         
         // 불러오기일 때 사용
         public static string LoadFileName { get; set; }

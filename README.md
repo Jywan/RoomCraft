@@ -117,6 +117,10 @@ RoomCraft_Unity/Assets/
 | TMP Dropdown 목록 글자만 한글 깨짐 | Dropdown의 Template(펼침 목록) 쪽 Item Label이 한글 미지원 기본 폰트를 사용 | Item Label의 Font Asset을 NotoSansKR-Regular SDF로 교체 |
 | 방 모양 Dropdown이 계속 기본값(Option A/B/C)으로 보임 | `SetupShapeDropdown()`을 작성만 하고 `Start()`에서 호출을 안 함 | `Start()`에 호출 추가 |
 | 방 모양 정보 없을 때 가구가 항상 경계 밖으로 판정됨 | `FurnitureBounds.IsInsideRoom()`이 `roomOutline == null`일 때 `false`를 반환(의도는 `true`) | `true`로 수정 |
+| 탭 구조로 재구성 후 `NewProjectPanel` 높이가 0으로 찌부러짐 | 입력 필드를 `NormalTabContent`(Layout Group 없는 컨테이너)로 재부모했는데, `NewProjectPanel`에 예전부터 붙어있던 `Vertical Layout Group`+`Content Size Fitter`가 새 자식의 선호 크기를 0으로 계산 | 두 컴포넌트 제거 후 Height 수동 복구 |
+| 커스텀 방 그리기에서 방 크기가 크면 그리드 점이 패널 밖으로 넘침 | `GenerateGrid()`가 점 간격을 고정값(`cellPixelSize`)으로 써서 입력값이 클수록 전체 그리드가 `GridArea` 크기를 초과 | `GridArea` 실제 크기에 맞춰 간격을 동적으로 축소하는 `effectiveCellPx` 계산 추가 |
+| 커스텀 탭을 처음 열 때 첫 클릭이 무반응, 두 번째 클릭에야 패널이 뜸 | `CustomRoomPanel`이 씬에 비활성 상태로 저장되어 있어 `Awake()`가 실행된 적이 없었고, 첫 클릭의 `SetActive(true)`가 오브젝트를 처음 활성화시키는 순간이라 Unity가 그 자리에서 `Awake()`를 실행 → `Awake()` 마지막 줄의 `SetActive(false)`가 방금 켠 걸 바로 꺼버림 | `CustomRoomPanel`을 씬에서 기본 활성화 상태로 저장 (런타임에 스스로 숨기는 방식으로 변경) |
+| 커스텀 탭 열면 뒤의 메인 화면/탭 버튼이 비쳐 보임 | `CustomRoomPanel`이 형제 오브젝트보다 먼저 그려지고 배경 알파도 낮음(0.78) | 탭 전환 시 `SetAsLastSibling()`으로 맨 앞에 그리기 + 배경 알파 1로 조정 |
 
 </details>
 

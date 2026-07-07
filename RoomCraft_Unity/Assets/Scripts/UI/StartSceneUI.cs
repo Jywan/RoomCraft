@@ -23,28 +23,54 @@ namespace RoomCraft.UI
         [SerializeField] private TMP_InputField widthInput;
         [SerializeField] private TMP_InputField depthInput;
         [SerializeField] private TMP_InputField heightInput;
-        [SerializeField] private TMP_Dropdown shapeDropdown;
         [SerializeField] private Button confirmNewButton;
         [SerializeField] private Button cancelNewButton;
-        
+        [SerializeField] private TMP_Dropdown shapeDropdown;
+
+        [Header("Tabs (일반 / 커스텀)")]
+        [SerializeField] private Button normalTabButton;
+        [SerializeField] private Button customTabButton;
+        [SerializeField] private GameObject normalTabContent;
+        [SerializeField] private CustomRoomPanel customRoomPanel;
+
         [Header("Load Panel")]
         [SerializeField] private GameObject loadPanel;
         [SerializeField] private Transform fileListContent;
         [SerializeField] private GameObject fileItemPrefab;
         [SerializeField] private Button cancelLoadButton;
 
+        
         private void Start()
         {
             newProjectPanel.SetActive(false);
             loadPanel.SetActive(false);
-            
+
             newProjectButton.onClick.AddListener(OpenNewProjectPanel);
             loadProjectButton.onClick.AddListener(OpenLoadPanel);
             confirmNewButton.onClick.AddListener(OnConfirmNewProject);
             cancelNewButton.onClick.AddListener(CloseNewProjectPanel);
             cancelLoadButton.onClick.AddListener(CloseLoadPanel);
-            
+
+            normalTabButton.onClick.AddListener(ShowNormalTab);
+            customTabButton.onClick.AddListener(ShowCustomTab);
+            customRoomPanel.CancelButton.onClick.AddListener(CloseNewProjectPanel);
+
             SetupShapeDropdown();
+        }
+
+        // ===== 탭 (일반 / 커스텀) =====
+
+        private void ShowNormalTab()
+        {
+            normalTabContent.SetActive(true);
+            customRoomPanel.ClosePanelExternally();
+        }
+
+        private void ShowCustomTab()
+        {
+            normalTabContent.SetActive(false);
+            customRoomPanel.OpenPanel();
+            customRoomPanel.transform.SetAsLastSibling();
         }
 
         private void SetupShapeDropdown()
@@ -52,6 +78,7 @@ namespace RoomCraft.UI
             shapeDropdown.ClearOptions();
             shapeDropdown.AddOptions(new List<string> {"사각형", "L자형"});
         }
+        
         
         
         // ===== 새 프로젝트 =====
@@ -64,11 +91,13 @@ namespace RoomCraft.UI
             depthInput.text = "";
             heightInput.text = "";
             shapeDropdown.value = 0;
+            ShowNormalTab();
         }
-        
+
         private void CloseNewProjectPanel()
         {
             newProjectPanel.SetActive(false);
+            customRoomPanel.ClosePanelExternally();
         }
 
         private void OnConfirmNewProject()
@@ -81,7 +110,7 @@ namespace RoomCraft.UI
             float depth = ParseFloat(depthInput.text, 3f);
             float height = ParseFloat(heightInput.text, 2.5f);
             RoomShape shape = (RoomShape)shapeDropdown.value;
-            
+
             SessionData.SetNewProject(roomName, width, depth, height, shape);
             SceneManager.LoadScene("EditorScene");
         }

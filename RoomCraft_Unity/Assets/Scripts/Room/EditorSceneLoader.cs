@@ -33,8 +33,14 @@ namespace RoomCraft.Room
 
         private void HandleNewProject()
         {
-            List<Vector2> vertices =
-                RoomShapePresets.GetVertices(SessionData.RoomShape, SessionData.RoomWidth, SessionData.RoomDepth);
+            List<Vector2> vertices;
+            
+            if (SessionData.RoomShape == RoomShape.Custom && SessionData.CustomVertices != null)
+                vertices = SessionData.CustomVertices;
+            else 
+                vertices = 
+                    RoomShapePresets.GetVertices(SessionData.RoomShape, SessionData.RoomWidth, SessionData.RoomDepth);
+            
             RoomData roomData = new RoomData(vertices, SessionData.RoomHeight, SessionData.RoomName);
             
             roomBuilder.BuildRoom(roomData);
