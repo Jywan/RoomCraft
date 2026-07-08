@@ -91,7 +91,7 @@ namespace RoomCraft.Room
             FurnitureBounds bounds = FindAnyObjectByType<FurnitureBounds>();
             
             if (bounds != null)
-                bounds.SetRoomShape(roomData.GetVertices());
+                bounds.SetRoomShape(roomData.GetVertices(), roomData.height);
         }
     }
 }

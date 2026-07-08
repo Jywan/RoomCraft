@@ -121,6 +121,7 @@ RoomCraft_Unity/Assets/
 | 커스텀 방 그리기에서 방 크기가 크면 그리드 점이 패널 밖으로 넘침 | `GenerateGrid()`가 점 간격을 고정값(`cellPixelSize`)으로 써서 입력값이 클수록 전체 그리드가 `GridArea` 크기를 초과 | `GridArea` 실제 크기에 맞춰 간격을 동적으로 축소하는 `effectiveCellPx` 계산 추가 |
 | 커스텀 탭을 처음 열 때 첫 클릭이 무반응, 두 번째 클릭에야 패널이 뜸 | `CustomRoomPanel`이 씬에 비활성 상태로 저장되어 있어 `Awake()`가 실행된 적이 없었고, 첫 클릭의 `SetActive(true)`가 오브젝트를 처음 활성화시키는 순간이라 Unity가 그 자리에서 `Awake()`를 실행 → `Awake()` 마지막 줄의 `SetActive(false)`가 방금 켠 걸 바로 꺼버림 | `CustomRoomPanel`을 씬에서 기본 활성화 상태로 저장 (런타임에 스스로 숨기는 방식으로 변경) |
 | 커스텀 탭 열면 뒤의 메인 화면/탭 버튼이 비쳐 보임 | `CustomRoomPanel`이 형제 오브젝트보다 먼저 그려지고 배경 알파도 낮음(0.78) | 탭 전환 시 `SetAsLastSibling()`으로 맨 앞에 그리기 + 배경 알파 1로 조정 |
+| 성능 최적화 중 방 경계 검사가 모서리 2개만 검사하게 됨 | `IsInsideRoom()`에서 매 프레임 배열 할당을 없애려고 재사용 버퍼(`cornerBuffer`)로 바꾸는 과정에서 복사 실수로 인덱스 2·3이 각각 인덱스 1·0과 동일한 값(`bounds.min.z`)을 사용 → 가구의 반대쪽 모서리 2개가 사실상 검사되지 않음 | 인덱스 2·3을 `bounds.max.z` 기준으로 수정 |
 
 </details>
 
@@ -128,5 +129,4 @@ RoomCraft_Unity/Assets/
 
 | 항목 | 내용 |
 |------|------|
-| Unity `== null` 비용 | Unity의 `== null`은 네이티브 오브젝트까지 확인하는 오버로딩 연산자라 비용이 높음. 매 프레임 호출되는 곳은 bool 플래그/캐싱으로 대체 예정 |
 | 저장/불러오기 UI | EditorToolbar의 저장 버튼 → EditorSaveUI 팝업으로 동작. 불러오기는 StartScene에서 처리 |

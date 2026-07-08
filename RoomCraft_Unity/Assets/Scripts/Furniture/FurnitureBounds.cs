@@ -19,14 +19,16 @@ namespace RoomCraft.Furniture
         [SerializeField] private Color warningColor = new Color(1f, 0.3f, 0.3f, 0.8f);
 
         private List<Vector2> roomOutLine;
-        
+        private float roomHeight;
+        private readonly Vector2[] cornerBuffer = new Vector2[4];           // 재사용 버퍼, 매 프레임 새로 안만들게 방지
         
         /// <summary>
         /// 방의 실제 꼭짓점(다각형)을 설정, RoomBuilder에서 방 생성 후 호출
         /// </summary>
-        public void SetRoomShape(List<Vector2> vertices)
+        public void SetRoomShape(List<Vector2> vertices, float height)
         {
             roomOutLine = GetInsetPolygon(vertices, wallTickness);
+            roomHeight = height;
         }
 
         
@@ -37,18 +39,25 @@ namespace RoomCraft.Furniture
         public bool IsInsideRoom(FurnitureObject furniture)
         {
             if (roomOutLine == null) return true;
+
+            Bounds bounds = furniture.GetBounds();
             
-            Bounds bounds = furniture.GetComponent<Collider>().bounds;
+            if (bounds.max.y > roomHeight) return false;
 
-            Vector2[] corners =
-            {
-                new Vector2(bounds.min.x, bounds.min.z),
-                new Vector2(bounds.max.x, bounds.min.z),
-                new Vector2(bounds.max.x, bounds.max.z),
-                new Vector2(bounds.min.x, bounds.max.z),
-            };
+            // Vector2[] corners =                              // GC 검증 확인 후 프레임마다 힙 할당이 자주 일어남으로 수정 진행
+            // {
+            //     new Vector2(bounds.min.x, bounds.min.z),
+            //     new Vector2(bounds.max.x, bounds.min.z),
+            //     new Vector2(bounds.max.x, bounds.max.z),
+            //     new Vector2(bounds.min.x, bounds.max.z),
+            // };
+            cornerBuffer[0] = new Vector2(bounds.min.x, bounds.min.z);
+            cornerBuffer[1] = new Vector2(bounds.max.x, bounds.min.z);
+            cornerBuffer[2] = new Vector2(bounds.max.x, bounds.max.z);
+            cornerBuffer[3] = new Vector2(bounds.min.x, bounds.max.z);
+            
 
-            foreach (Vector2 corner in corners)
+            foreach (Vector2 corner in cornerBuffer)
             {
                 if (!PolygonUtils.PointInPolygon(corner, roomOutLine))
                     return false;
@@ -64,16 +73,16 @@ namespace RoomCraft.Furniture
         /// </summary>
         public bool IsOverlapping(FurnitureObject furniture)
         {
-            Bounds mybounds = furniture.GetComponent<Collider>().bounds;
+            Bounds mybounds = furniture.GetBounds();
             
-            // 씬 안에 있는 모든 가구들을 찾아서 비교 
-            FurnitureObject[] allFurniture = FindObjectsByType<FurnitureObject>(FindObjectsSortMode.None);
+            // 변경: 소스 최적화 적용 FindObjectsByType<FurnitureObject>(FindObjectsSortMode.None) 으로 매 프레임 씬 전체 검색에서
+            //      FurnitureObject.All (등록/해제로 관리되는 캐시된 리스트)을 대신 사용
 
-            foreach (FurnitureObject other in allFurniture)
+            foreach (FurnitureObject other in FurnitureObject.All)
             {
                 if (other ==  furniture) continue;  // 자기 자신은 스킵
                 
-                Bounds otherBounds = other.GetComponent<Collider>().bounds;
+                Bounds otherBounds = other.GetBounds();
                 
                 if (mybounds.Intersects(otherBounds))
                     return true;
@@ -93,13 +102,15 @@ namespace RoomCraft.Furniture
             bool insideRoom = IsInsideRoom(furniture);
             bool overlapping = IsOverlapping(furniture);
             
-            Renderer renderer = furniture.GetComponentInChildren<Renderer>();
-            if (renderer == null) return true;
+            // Renderer renderer = furniture.GetComponentInChildren<Renderer>();
+            // if (renderer == null) return true;       최적화로 인한 수정
+            Renderer[] renderers = furniture.GetRenderers();
+            if (renderers.Length == 0) return true;
 
             if (!insideRoom || overlapping)
             {
                 // 경고 표시: 빨간색 (자식 전체에 적용)
-                Renderer[] renderers = furniture.GetComponentsInChildren<Renderer>();
+                // Renderer[] renderers = furniture.GetComponentsInChildren<Renderer>();    최적화로 인한 수정
                 foreach (Renderer r in renderers)
                     r.material.color = warningColor;
                 return false;

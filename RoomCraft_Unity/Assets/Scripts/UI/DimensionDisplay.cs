@@ -21,22 +21,26 @@ namespace RoomCraft.UI
         [Header("References")]
         [SerializeField] private FurnitureInteraction interaction;
         
+        private RectTransform panelRect;        // panel의 RectTransform 캐싱용
+        private FurnitureObject lastFurniture;
+        private Vector3 lastPos;
+        
         private void Start()
         {
             panel.SetActive(false);
+            panelRect = panel.GetComponent<RectTransform>();            // 여기서 한번만 호출
         }
         
         private void Update()
         {
-            FurnitureObject selected = interaction.GetSelectedFurniture();
-
-            if (selected != null)
+            if (interaction.HasSelection)
             {
-                ShowInfo(selected);
+                ShowInfo(interaction.GetSelectedFurniture());
             }
             else
             {
                 HidePanel();
+                lastFurniture = null;       // 선택 해제시 캐시 초기화하도록 추가
             }
         }
         
@@ -47,16 +51,32 @@ namespace RoomCraft.UI
         private void ShowInfo(FurnitureObject furniture)
         {
             panel.SetActive(true);
-
-            FurnitureData data = furniture.GetData();
-
-            nameText.text = data.furnitureName;
-            sizeText.text = $"{data.widthCm} x {data.depthCm} x {data.heightCm} cm";
             
+            bool furnitureChanged = furniture != lastFurniture;     // 선택된 가구 자체가 바뀌었는지 체크
             Vector3 pos = furniture.transform.position;
-            posText.text = $"위치: ({pos.x:F2}, {pos.z:F2})";
+            bool posChanged = pos != lastPos;                       // 위치가 바뀌었는지 체크
+
+            if (furnitureChanged)
+            {
+                FurnitureData data = furniture.GetData();
+                nameText.text = data.furnitureName;
+                sizeText.text = $"{data.widthCm} x {data.depthCm} x {data.heightCm} cm";
+            }
+
+            if (furnitureChanged || posChanged)
+            {
+                posText.text = $"위치: ({pos.x:F2}, {pos.z:F2})";
+            }
+
+            if (furnitureChanged)
+            {
+                // LayoutRebuilder.ForceRebuildLayoutImmediate(panel.GetComponent<RectTransform>()); 캐싱 최적화로 아래로 변경
+                LayoutRebuilder.ForceRebuildLayoutImmediate(panelRect);
+            }
             
-            LayoutRebuilder.ForceRebuildLayoutImmediate(panel.GetComponent<RectTransform>());
+            // 마지막 값 재세팅
+            lastFurniture = furniture;
+            lastPos = pos;
         }
         
 

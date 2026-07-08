@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using RoomCraft.Data;
 using UnityEngine;
 
@@ -10,11 +12,34 @@ namespace RoomCraft.Furniture
     /// </summary>
     public class FurnitureObject : MonoBehaviour
     {
+        // 추가 수정(최적화): 씬에 활성화되어 있는 모든 FurnitureObject를 자동으로 추적하는 정적 리스트
+        // FurnitureBounds.IsOverlapping()이 매 프레임 FindObjectsByType로 씬을 스캔하던 걸
+        // 여기서 미리 관리햐둔 리스트를 읽는것으로 대체하기 위함
+        public static readonly List<FurnitureObject> All = new List<FurnitureObject>();
+        
         private FurnitureData data;
         private Renderer furnitureRenderer;
+        private Collider furnitureCollider;         // Collider 캐싱용 필드 추가
+        private Renderer[] allRenderers;            // 전체 자식 Renderer 캐싱용
         private Color originalColor;
         private bool isSelected = false;
-
+        
+        /// <summary>
+        /// 이 컴포넌트가 활성화 될 때 (예: 가구 생성시) 리스트에 자기 자신을 등록
+        /// </summary>
+        private void OnEnable()
+        {
+            All.Add(this);
+        }
+        
+        /// <summary>
+        /// 이 컴포넌트가 비활성화/파괴될 때(가구 삭제 시) 리스트에서 제거
+        /// </summary>
+        private void OnDisable()
+        {
+            All.Remove(this);
+        }
+        
         /// <summary>
         /// 가구 생성 시 호출, 데이터를 받아서 오브젝트에 적용한다.
         /// scale를 치수에 맞게 설정하고, 색상을 입힌다.
@@ -23,6 +48,8 @@ namespace RoomCraft.Furniture
         {
             data = furnitureData;
             furnitureRenderer = GetComponent<Renderer>();
+            furnitureCollider = GetComponent<Collider>();           // 여기서 한번만 GetComponent 호출
+            allRenderers = GetComponentsInChildren<Renderer>();
             
             // 팩토리가 이미 크기/색상을 설정했으므로 여기는 이름/태그만
             // Renderer가 없을 수 있음 - root에는 Renderer가 없고 자식에만 있음
@@ -50,8 +77,8 @@ namespace RoomCraft.Furniture
         public void Select()
         {
             isSelected = true;
-            Renderer[] renderers = GetComponentsInChildren<Renderer>();
-            foreach (Renderer r in renderers)
+            // Renderer[] renderers = GetComponentsInChildren<Renderer>(); 캐싱 최적화로 인해 주석 처리
+            foreach (Renderer r in allRenderers)
                 r.material.color = originalColor * 1.3f;
         }
 
@@ -61,8 +88,8 @@ namespace RoomCraft.Furniture
         public void Deselect()
         {
             isSelected = false;
-            Renderer[] renderers = GetComponentsInChildren<Renderer>();
-            foreach (Renderer r in renderers)
+            // Renderer[] renderers = GetComponentsInChildren<Renderer>(); 캐싱 최적화로 인해 주석 처리
+            foreach (Renderer r in allRenderers)
                 r.material.color = originalColor;
         }
 
@@ -104,6 +131,23 @@ namespace RoomCraft.Furniture
         public float GetRotationY()
         {
             return transform.eulerAngles.y;
+        }
+
+        
+        /// <summary>
+        /// FurnitureBounds 등 외부에서 매번 GetComponent<Collider>() 호출하는 대신 이걸 쓰도록 전환
+        /// </summary>
+        public Bounds GetBounds()
+        {
+            return furnitureCollider.bounds;
+        }
+
+        /// <summary>
+        /// FurnitureBounds.ValidatePosition()에서 쓰도록 노출
+        /// </summary>
+        public Renderer[] GetRenderers()
+        {
+            return allRenderers;
         }
     }
 }

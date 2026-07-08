@@ -16,15 +16,20 @@ namespace RoomCraft.Furniture
         [SerializeField] private LayerMask furnitureLayer;      // 가구 레이어 (클릭 감지용)
         
         private FurnitureObject selectedFurniture = null;
+        private bool hasSelection = false;                      // selectedFurniture != null 매 프레임 검사 대신 캐싱 
         private bool isDragging = false;
         private Camera mainCamera;
         private FurnitureBounds bounds;
+        private bool hasBounds;                                 // bounds != null 매 프레임 검사 대신 캐싱
         private Vector3 lastValidPosition;                      // 마지막 유효 위치 (무효 시 되돌리기 용도!)
-
+        
+        public bool HasSelection => hasSelection;               // 외부 (UI 등)에서 low cost로 선택 여부만 확인할 때 사용
+        
         private void Start()
         {
             mainCamera = Camera.main;
             bounds = FindAnyObjectByType<FurnitureBounds>();
+            hasBounds = bounds != null;
         }
         
         private void Update()
@@ -100,6 +105,7 @@ namespace RoomCraft.Furniture
                         selectedFurniture.Deselect();
                     
                     selectedFurniture = clicked;
+                    hasSelection = true;                    // zotld
                     selectedFurniture.Select();
                     isDragging = true;
                     lastValidPosition = selectedFurniture.transform.position;
@@ -127,7 +133,7 @@ namespace RoomCraft.Furniture
         /// </summary>
         private void HandleDrag()
         {
-            if (selectedFurniture == null || !isDragging) return;
+            if (!hasSelection || !isDragging) return;
             
             // 마우스 뗐으면 드래그 종료
             if (Input.GetMouseButtonUp(0))
@@ -135,7 +141,7 @@ namespace RoomCraft.Furniture
                 isDragging = false;
                 
                 // 최종 위치가 유효하지 않으면 마지막 유효 위치로 이동
-                if (bounds != null && !bounds.ValidatePosition(selectedFurniture))
+                if (hasBounds && !bounds.ValidatePosition(selectedFurniture))
                 {
                     selectedFurniture.MoveTo(lastValidPosition);
                     selectedFurniture.Select();         // 색상 복귀
@@ -157,8 +163,8 @@ namespace RoomCraft.Furniture
                 
                 selectedFurniture.MoveTo(targetPos);
                 
-                // 드래그 실시간 검증
-                if (bounds != null)
+                // 드래그 실시간 검증 (캐싱)
+                if (hasBounds)
                 {
                     bool valid = bounds.ValidatePosition(selectedFurniture);
                     if (valid)
@@ -175,20 +181,17 @@ namespace RoomCraft.Furniture
         /// <summary>
         /// R 또는 E 키를 누르면 가구를 +45도 회전
         /// Q를 누르면 -45도 회전
+        /// 캐싱처리
         /// </summary>
         private void HandleRotation()
         {
-            if (selectedFurniture == null) return;
+            if (!hasSelection) return;
 
             if (Input.GetKeyDown(KeyCode.R) || Input.GetKeyDown(KeyCode.E))
-            {
                 RotateSelected(45f);
-            }
 
             if (Input.GetKeyDown(KeyCode.Q))
-            {
                 RotateSelected(-45f);
-            }
         }
     
         
@@ -197,7 +200,7 @@ namespace RoomCraft.Furniture
         /// </summary>
         public void RotateSelected(float angle)
         {
-            if (selectedFurniture == null) return;
+            if (!hasSelection) return;
             selectedFurniture.RotateBy(angle);
         }
 
@@ -207,7 +210,7 @@ namespace RoomCraft.Furniture
         /// </summary>
         public void SetSelectedRotation(float angleY)
         {
-            if (selectedFurniture == null) return;
+            if (!hasSelection) return;
             selectedFurniture.SetRotationY(angleY);
         }
         
@@ -219,19 +222,18 @@ namespace RoomCraft.Furniture
         /// </summary>
         private void HandleDelete()
         {
-            if (selectedFurniture == null) return;
+            if (!hasSelection) return;
 
             if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace))
-            {
                 DeleteSelected();
-            }
         }
 
         public void DeleteSelected()
         {
-            if (selectedFurniture == null) return;
+            if (!hasSelection) return;
             Destroy(selectedFurniture.gameObject);
             selectedFurniture = null;
+            hasSelection = false;
         }
         
         
@@ -242,10 +244,11 @@ namespace RoomCraft.Furniture
         /// </summary>
         private void DeselectCurrent()
         {
-            if (selectedFurniture != null)
+            if (hasSelection)
             {
                 selectedFurniture.Deselect();
                 selectedFurniture = null;
+                hasSelection = false;
             }
             isDragging = false;
         }

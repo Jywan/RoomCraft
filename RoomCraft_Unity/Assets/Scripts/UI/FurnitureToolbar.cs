@@ -40,14 +40,12 @@ namespace RoomCraft.UI
         
         private void Update()
         {
-            FurnitureObject selected =
-                furnitureInteraction != null ? furnitureInteraction.GetSelectedFurniture() : null;
-    
-            bool hasSelection = selected != null;
+            bool hasSelection = furnitureInteraction.HasSelection;
             panel.SetActive(hasSelection);
     
             if (hasSelection)
             {
+                FurnitureObject selected = furnitureInteraction.GetSelectedFurniture();
                 UpdatePreview(selected);
                 rotationSlider.SetValueWithoutNotify(selected.GetRotationY());
             }
