@@ -2,6 +2,8 @@
 
 > "내 가구가 이 방에 들어갈까?"를 3D로 확인하는 도구
 
+**플레이**: [jywan.github.io/RoomCraft](https://jywan.github.io/RoomCraft/) (WebGL, PC 브라우저 권장)
+
 ## 소개
 
 실제 가구 치수(cm)를 입력해서 방 안에 배치해보는 3D 시뮬레이터입니다.
@@ -86,7 +88,8 @@ RoomCraft_Unity/Assets/
 - [x] Phase 5-1: 다각형 기반 방 생성 (꼭짓점 리스트로 바닥/벽 생성)
 - [x] Phase 5-2: 프리셋 방 모양 선택 (사각형/L자형 등)
 - [x] Phase 5-3: 커스텀 방 모양 편집 (점 클릭으로 다각형 직접 그리기)
-- [ ] Phase 6: WebGL/모바일 빌드 배포
+- [x] Phase 6-1: WebGL 배포 (GitHub Pages)
+- [ ] Phase 6-2: 모바일(Android/iOS) 빌드 배포
 
 </details>
 
@@ -122,6 +125,7 @@ RoomCraft_Unity/Assets/
 | 커스텀 탭을 처음 열 때 첫 클릭이 무반응, 두 번째 클릭에야 패널이 뜸 | `CustomRoomPanel`이 씬에 비활성 상태로 저장되어 있어 `Awake()`가 실행된 적이 없었고, 첫 클릭의 `SetActive(true)`가 오브젝트를 처음 활성화시키는 순간이라 Unity가 그 자리에서 `Awake()`를 실행 → `Awake()` 마지막 줄의 `SetActive(false)`가 방금 켠 걸 바로 꺼버림 | `CustomRoomPanel`을 씬에서 기본 활성화 상태로 저장 (런타임에 스스로 숨기는 방식으로 변경) |
 | 커스텀 탭 열면 뒤의 메인 화면/탭 버튼이 비쳐 보임 | `CustomRoomPanel`이 형제 오브젝트보다 먼저 그려지고 배경 알파도 낮음(0.78) | 탭 전환 시 `SetAsLastSibling()`으로 맨 앞에 그리기 + 배경 알파 1로 조정 |
 | 성능 최적화 중 방 경계 검사가 모서리 2개만 검사하게 됨 | `IsInsideRoom()`에서 매 프레임 배열 할당을 없애려고 재사용 버퍼(`cornerBuffer`)로 바꾸는 과정에서 복사 실수로 인덱스 2·3이 각각 인덱스 1·0과 동일한 값(`bounds.min.z`)을 사용 → 가구의 반대쪽 모서리 2개가 사실상 검사되지 않음 | 인덱스 2·3을 `bounds.max.z` 기준으로 수정 |
+| GitHub Pages 배포 후 게임이 404로 안 뜸 (`build.loader.js` 로드 실패) | `.gitignore`의 `[Bb]uild/` 규칙이 Unity 자체 빌드 폴더뿐 아니라 경로 어디에 있든 이름이 Build/build인 폴더를 전부 무시함 — `docs/Build/`도 여기 걸려서 커밋 자체가 안 됨 | `.gitignore`에 `!docs/Build/` 예외 규칙 추가 |
 
 </details>
 
