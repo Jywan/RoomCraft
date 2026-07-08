@@ -76,3 +76,6 @@ DEV-CONTEXT.md
 # Readme asset
 **/Readme.asset
 **/Readme.asset.meta
+
+# GitHub Pages WebGL 배포본은 [Bb]uild/ 규칙에서 예외 처리
+!docs/Build/
