@@ -34,8 +34,15 @@ namespace RoomCraft.UI
         
         [Header("References")]
         [SerializeField] private FurnitureInteraction furnitureInteraction;
+        [SerializeField] private FurniturePresetManager presetManager;
+        
+        [Header("Preset")]
+        [SerializeField] private TMP_Dropdown presetDropdown;
+        [SerializeField] private Button savePresetButton;
         
         private Color selectedColor = Color.white;
+        private List<FurnitureData> currentPresets = new List<FurnitureData>();
+        private TextMeshProUGUI savePresetButtonLabel;
         
         /// <summary>
         /// 초기화: 버튼 이벤트 연결, 드롭다운 옵션 세팅
@@ -45,6 +52,8 @@ namespace RoomCraft.UI
             // 버튼 이벤트 연결
             createButton.onClick.AddListener(OnCreateClicked);
             cancelButton.onClick.AddListener(OnCancelClicked);
+            savePresetButton.onClick.AddListener(OnSavePresetClicked);
+            presetDropdown.onValueChanged.AddListener(OnPresetSelected);
             
             // 카테고리 드롭다운 옵션 세팅
             SetupCategoryDropdown();
@@ -55,10 +64,11 @@ namespace RoomCraft.UI
             // 색상 피커 이벤트 연결
             colorPicker.OnColorChanged += SelectColor;
             
+            savePresetButtonLabel = savePresetButton.GetComponentInChildren<TextMeshProUGUI>();
+            
             // 시작 시 패널 숨김
             panel.SetActive(false);
         }
-        
         
         /// <summary>
         /// 카테고리 드롭다운에 enum 값들을 옵션으로 추가한다.
@@ -81,7 +91,6 @@ namespace RoomCraft.UI
             
             categoryDropdown.AddOptions(options);
         }
-
         
         /// <summary>
         /// 미리 정의된 색상 버튼들에 클릭 이벤트를 연결한다.
@@ -98,7 +107,6 @@ namespace RoomCraft.UI
                 btn.onClick.AddListener(() => SelectColor(btnColor));
             }
         }
-
         
         /// <summary>
         /// 색상 선택 시 호출. 미리보기 업데이트.
@@ -109,39 +117,15 @@ namespace RoomCraft.UI
             if (colorPreview != null)
                 colorPreview.color = color;
         }
-
-
+        
         private void OnCreateClicked()
         {
-            // 입력값 파싱
-            string furnitureName = nameInput.text;
-            if (string.IsNullOrEmpty(furnitureName))
-                furnitureName = "이름없는 가구";
-            
-            float width, depth, height;
-            if (!float.TryParse(widthInput.text, out width)) width = 50f;
-            if (!float.TryParse(depthInput.text, out depth)) depth = 50f;
-            if (!float.TryParse(heightInput.text, out height)) height = 50f;
-            
-            // 최소/최대 제한 (1cm ~ 500cm)
-            width = Mathf.Clamp(width, 1f, 500f);
-            depth = Mathf.Clamp(depth, 1f, 500f);
-            height = Mathf.Clamp(height, 1f, 500f);
-            
-            // 카테고리 변환
-            FurnitureCategory category = (FurnitureCategory)categoryDropdown.value;
-            
-            // 데이터 변환
-            FurnitureData data = new FurnitureData(furnitureName, category, width, depth, height);
-            data.color = selectedColor;
-            
+            FurnitureData data = BuildFurnitureDataFromForm();
             // 가구 형성
             furnitureInteraction.CreateFurniture(data);
-            
             // 팝업 닫기
             panel.SetActive(false);
         }
-
         
         /// <summary>
         /// 취소 버튼: 팝업을 닫는다
@@ -164,6 +148,75 @@ namespace RoomCraft.UI
             if (colorPreview != null)
                 colorPreview.color = Color.white;
             colorPicker.SetColor(Color.white);
+            
+            RefreshPresetDropdown();
+        }
+
+        public FurnitureData BuildFurnitureDataFromForm()
+        {
+            string furnitureName = nameInput.text;
+            if (string.IsNullOrEmpty(furnitureName))
+                furnitureName = "이름없는 가구";
+            
+            float width, depth, height;
+            if (!float.TryParse(widthInput.text, out width)) width = 50f;
+            if (!float.TryParse(depthInput.text, out depth)) depth = 50f;
+            if (!float.TryParse(heightInput.text, out height)) height = 50f;
+            
+            width = Mathf.Clamp(width, 1f, 500f);
+            depth =  Mathf.Clamp(depth, 1f, 500f);
+            height = Mathf.Clamp(height, 1f, 500f);
+            
+            FurnitureCategory category = (FurnitureCategory)categoryDropdown.value;
+            
+            FurnitureData data = new FurnitureData(furnitureName, category, width, depth, height);
+            data.color = selectedColor;
+            return data;
+        }
+
+        private void OnSavePresetClicked()
+        {
+            FurnitureData data = BuildFurnitureDataFromForm();
+            presetManager.SavePreset(data);
+            RefreshPresetDropdown();
+            presetDropdown.SetValueWithoutNotify(currentPresets.Count);     // 방금 저장된 프리셋 항목을 선택한 상태로 전환
+
+            if (savePresetButtonLabel != null)
+            {
+                savePresetButtonLabel.text = "저장됨!";
+                Invoke(nameof(ResetSavePresetButtonLabel), 1f);
+            }
+        }
+
+        private void ResetSavePresetButtonLabel()
+        {
+            savePresetButtonLabel.text = "프리셋으로 저장";
+        }
+
+        private void OnPresetSelected(int index)
+        {
+            if (index <= 0 || index > currentPresets.Count) return;     // 0번은 "프리셋 선택"
+            
+            FurnitureData preset = currentPresets[index - 1];
+            nameInput.text = preset.furnitureName;
+            widthInput.text = preset.widthCm.ToString();
+            depthInput.text = preset.depthCm.ToString();
+            heightInput.text = preset.heightCm.ToString();
+            categoryDropdown.value = (int)preset.category;
+            SelectColor(preset.color);
+        }
+
+        private void RefreshPresetDropdown()
+        {
+            currentPresets = presetManager.LoadAllPresets();
+            
+            presetDropdown.ClearOptions();
+            List<string> options = new List<string> { "프리셋 선택" };
+            foreach (FurnitureData preset in currentPresets)
+                options.Add(preset.furnitureName);
+            
+            presetDropdown.AddOptions(options);
+            presetDropdown.SetValueWithoutNotify(0);
         }
     }
 }

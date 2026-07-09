@@ -70,10 +70,14 @@ namespace RoomCraft.CameraSystem
         
         // Camera.main 캐싱
         private Camera mainCamera;
+        
+        // CharacterController 캐싱
+        private bool hasCharacterController;
 
         private void Start()
         {
             mainCamera = Camera.main;
+            hasCharacterController = characterController != null;
             ApplyTopView();
         }
 
@@ -372,8 +376,8 @@ namespace RoomCraft.CameraSystem
             {
                 Vector3 delta2 = move.normalized * (moveSpeed * Time.deltaTime);
                 
-                // CharacterController가 연결되어 있다면 충돌 처리된 이동, 없다면 기존 방식으로 적용
-                if (characterController != null)
+                // CharacterController가 연결되어 있다면 충돌 처리된 이동, 없다면 기존 방식으로 적용 (캐싱적용)
+                if (hasCharacterController)
                     characterController.Move(delta2);
                 else 
                     transform.position += delta2;

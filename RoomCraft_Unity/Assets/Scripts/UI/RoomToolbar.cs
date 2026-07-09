@@ -40,7 +40,9 @@ namespace RoomCraft.UI
         private void Update()
         {
             // UI 입력 중이면 단축키 무시
-            if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
+            // if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
+            //     return;
+            if (EventSystem.current.currentSelectedGameObject != null)
                 return;
             
             if (Input.GetKeyDown(KeyCode.T))

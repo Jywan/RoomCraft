@@ -4,6 +4,7 @@
 
 **플레이**: [jywan.github.io/RoomCraft](https://jywan.github.io/RoomCraft/) (WebGL, PC 브라우저 권장)
 > WebGL 빌드는 Unity의 한계로 한글 입력 시 자모가 조합되지 않고 낱자로 입력됩니다(예: "방" → "ㅂㅏㅇ"). 방/가구 이름은 영어로 입력해주세요.
+> 저장/불러오기는 같은 브라우저 세션 안에서만 유지됩니다. 새로고침하거나 다시 접속하면 저장된 프로젝트가 사라집니다.
 
 ## 소개
 
@@ -16,7 +17,8 @@
 - **가구 생성**: 카테고리별 기본 형태 + 사용자 치수(cm) 입력
 - **드래그 배치**: 가구를 드래그로 방 안에 배치, 회전, 이동
 - **시점 전환**: 탑뷰(평면도) ↔ 3D 자유시점 ↔ 1인칭 뷰
-- **저장/관리**: 여러 레이아웃 비교, 가구 목록 재사용
+- **저장/관리**: 프로젝트 저장/불러오기
+- **가구 프리셋**: 자주 쓰는 가구를 즐겨찾기처럼 저장해두고 다른 프로젝트에서도 바로 재사용
 
 ## 기술 스택
 
@@ -93,6 +95,7 @@ RoomCraft_Unity/Assets/
 - [x] Phase 6-1: WebGL 배포 (GitHub Pages)
 - [ ] Phase 6-2: 모바일(Android/iOS) 빌드 배포
 - [x] Phase 7: 1인칭 시점 추가 (WASD 이동, 마우스 시점 회전, 벽 충돌 처리)
+- [x] Phase 8: 가구 프리셋 시스템 (전역 저장, 다른 프로젝트에서도 재사용)
 
 </details>
 
@@ -129,6 +132,9 @@ RoomCraft_Unity/Assets/
 | 커스텀 탭 열면 뒤의 메인 화면/탭 버튼이 비쳐 보임 | `CustomRoomPanel`이 형제 오브젝트보다 먼저 그려지고 배경 알파도 낮음(0.78) | 탭 전환 시 `SetAsLastSibling()`으로 맨 앞에 그리기 + 배경 알파 1로 조정 |
 | 성능 최적화 중 방 경계 검사가 모서리 2개만 검사하게 됨 | `IsInsideRoom()`에서 매 프레임 배열 할당을 없애려고 재사용 버퍼(`cornerBuffer`)로 바꾸는 과정에서 복사 실수로 인덱스 2·3이 각각 인덱스 1·0과 동일한 값(`bounds.min.z`)을 사용 → 가구의 반대쪽 모서리 2개가 사실상 검사되지 않음 | 인덱스 2·3을 `bounds.max.z` 기준으로 수정 |
 | GitHub Pages 배포 후 게임이 404로 안 뜸 (`build.loader.js` 로드 실패) | `.gitignore`의 `[Bb]uild/` 규칙이 Unity 자체 빌드 폴더뿐 아니라 경로 어디에 있든 이름이 Build/build인 폴더를 전부 무시함 — `docs/Build/`도 여기 걸려서 커밋 자체가 안 됨 | `.gitignore`에 `!docs/Build/` 예외 규칙 추가 |
+| 1인칭에서 T키를 눌러도 영원히 못 빠져나옴 | `ToggleView()`의 3단 순환 조건 순서가 꼬여서 `FirstPerson` 상태일 때 `SwitchMode(FirstPerson)`(자기 자신)을 호출 → `SwitchMode()`의 "같은 모드면 무시" 가드에 걸려 아무 반응 없음 | `FreeView → FirstPerson`, `FirstPerson → TopView`로 분기 순서 수정 |
+| `CharacterController` 연결해도 1인칭에서 계속 벽을 통과함 | Main Camera에 `Character Controller` 컴포넌트 자체를 추가하지 않은 채(또는 씬 저장 없이) 코드만 반영되어, `characterController != null` 체크가 조용히 충돌 없는 폴백 경로로 빠짐 | 컴포넌트 실제 추가 + 인스펙터 슬롯 연결 + 씬 저장 |
+| `GridSnap` 캐싱 코드가 컴파일 에러 | 이전에 제안한 `gridSnap` 필드 캐싱을 적용할 때 필드 선언 없이 `Start()`의 대입문만 반영됨 | 필드 선언 추가, `HandleDrag()`가 실제로 캐싱된 필드를 쓰도록 완성 |
 
 </details>
 

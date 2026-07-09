@@ -24,6 +24,9 @@ namespace RoomCraft.Furniture
         private FurnitureBounds bounds;
         private bool hasBounds;                                 // bounds != null 매 프레임 검사 대신 캐싱
         private Vector3 lastValidPosition;                      // 마지막 유효 위치 (무효 시 되돌리기 용도!)
+        private bool hasCameraController;
+        private GridSnap gridSnap;
+        private bool hasGridSnap;
         
         public bool HasSelection => hasSelection;               // 외부 (UI 등)에서 low cost로 선택 여부만 확인할 때 사용
         
@@ -32,12 +35,16 @@ namespace RoomCraft.Furniture
             mainCamera = Camera.main;
             bounds = FindAnyObjectByType<FurnitureBounds>();
             hasBounds = bounds != null;
+            gridSnap = FindAnyObjectByType<GridSnap>();
+            hasGridSnap = gridSnap != null;
+            hasCameraController = cameraController != null;
         }
         
         private void Update()
         {
-            if (cameraController != null && cameraController.GetCurrentMode() == CameraMode.FirstPerson)
-                return;
+            // if (cameraController != null && cameraController.GetCurrentMode() == CameraMode.FirstPerson)
+            //     return;
+            if (hasCameraController && cameraController.GetCurrentMode() == CameraMode.FirstPerson) return;
             
             HandleSelection();
             HandleDrag();
@@ -97,7 +104,9 @@ namespace RoomCraft.Furniture
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, 100f))
-            {
+            {   
+                
+                // hit.collider가 클릭할 때마다 다른 콜라이더를 맞히는 거라 캐싱 불필요 
                 FurnitureObject clicked = hit.collider.GetComponent<FurnitureObject>();
                 
                 if (clicked == null)
@@ -106,11 +115,11 @@ namespace RoomCraft.Furniture
                 if (clicked != null)
                 {
                     // 기존 선택 해제
-                    if (selectedFurniture != null && selectedFurniture != clicked)
+                    if (hasSelection && selectedFurniture != clicked)
                         selectedFurniture.Deselect();
                     
                     selectedFurniture = clicked;
-                    hasSelection = true;                    // zotld
+                    hasSelection = true;
                     selectedFurniture.Select();
                     isDragging = true;
                     lastValidPosition = selectedFurniture.transform.position;
@@ -162,9 +171,8 @@ namespace RoomCraft.Furniture
             {
                 // 그리드 스냅 적용
                 Vector3 targetPos = hit.point;
-                GridSnap grid = FindAnyObjectByType<GridSnap>();
-                if (grid != null)
-                    targetPos = grid.Snap(targetPos);
+                if (hasGridSnap)
+                    targetPos = gridSnap.Snap(targetPos);
                 
                 selectedFurniture.MoveTo(targetPos);
                 
