@@ -1,3 +1,4 @@
+using RoomCraft.CameraSystem;
 using RoomCraft.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,8 +13,9 @@ namespace RoomCraft.Furniture
     public class FurnitureInteraction : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private LayerMask floorLayer;          // 바닥 레이어 (드래그 시 Raycast 대상)
-        [SerializeField] private LayerMask furnitureLayer;      // 가구 레이어 (클릭 감지용)
+        [SerializeField] private LayerMask floorLayer;                  // 바닥 레이어 (드래그 시 Raycast 대상)
+        [SerializeField] private LayerMask furnitureLayer;              // 가구 레이어 (클릭 감지용)
+        [SerializeField] private CameraController cameraController;     // 1인 칭 중엔 선택/드래그 비활성화를 위해 카메라 컨트롤러 호출 사용.
         
         private FurnitureObject selectedFurniture = null;
         private bool hasSelection = false;                      // selectedFurniture != null 매 프레임 검사 대신 캐싱 
@@ -34,6 +36,9 @@ namespace RoomCraft.Furniture
         
         private void Update()
         {
+            if (cameraController != null && cameraController.GetCurrentMode() == CameraMode.FirstPerson)
+                return;
+            
             HandleSelection();
             HandleDrag();
             HandleRotation();
@@ -260,6 +265,14 @@ namespace RoomCraft.Furniture
         public FurnitureObject GetSelectedFurniture()
         {
             return selectedFurniture;
+        }
+        
+        /// <summary>
+        /// 1인칭 모드 진입 등 외부에서 강제로 선택 해제 할때 사용.
+        /// </summary>
+        public void DeselectAll()
+        {
+            DeselectCurrent();
         }
     }
 }

@@ -1,3 +1,5 @@
+using RoomCraft.Furniture;
+using RoomCraft.Room;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -6,7 +8,8 @@ namespace RoomCraft.CameraSystem
     public enum CameraMode
     {
         TopView,
-        FreeView
+        FreeView,
+        FirstPerson
     }
     
     /// <summary>
@@ -36,6 +39,13 @@ namespace RoomCraft.CameraSystem
         [Header("Furniture Interaction")]
         [SerializeField] private LayerMask furnitureLayer;
         
+        [Header("First Person Settings")]
+        [SerializeField] private RoomBuilder roomBuilder;
+        [SerializeField] private FurnitureInteraction furnitureInteraction;
+        [SerializeField] private float moveSpeed = 3f;
+        [SerializeField] private float lookSpeed = 2f;
+        [SerializeField] private CharacterController characterController;
+        
         private CameraMode currentMode = CameraMode.TopView;
         private float horizontalAngle = 0f;
         private float verticalAngle = 45f;
@@ -51,9 +61,19 @@ namespace RoomCraft.CameraSystem
         private Quaternion transitionEndRot;
         private float transitionProgress = 0f;
         private float transitionDuration = 0.5f;
+        
+        // 1인칭 사용
+        private float fpYaw = 0f;
+        private float fpPitch = 0f;
+        private bool fpDragging = false;
+        private Vector3 fpLastMousePosition;
+        
+        // Camera.main 캐싱
+        private Camera mainCamera;
 
         private void Start()
         {
+            mainCamera = Camera.main;
             ApplyTopView();
         }
 
@@ -66,9 +86,9 @@ namespace RoomCraft.CameraSystem
             }
 
             if (currentMode == CameraMode.FreeView)
-            {
                 HandleFreeViewInput();
-            }
+            else if (currentMode == CameraMode.FirstPerson)
+                HandleFirstPersonInput();
             
             HandleZoom();
         }
@@ -93,7 +113,9 @@ namespace RoomCraft.CameraSystem
         {
             if (currentMode == CameraMode.TopView)
                 SwitchMode(CameraMode.FreeView);
-            else 
+            else if (currentMode == CameraMode.FreeView)
+                SwitchMode(CameraMode.FirstPerson);
+            else
                 SwitchMode(CameraMode.TopView);
         }
 
@@ -105,9 +127,6 @@ namespace RoomCraft.CameraSystem
             return currentMode;
         }
         
-        
-        // ===== private Methods =====
-
         /// <summary>
         /// FreeView 상태에서 좌클릭 드래그 입력을 처리.
         /// 드래그 방향에 따라 수평/수직 각도를 변경하여 카메라를 targetPoint 기준으로 공전시킨다.
@@ -118,11 +137,10 @@ namespace RoomCraft.CameraSystem
             if (Input.GetMouseButtonDown(0))
             {
                 // UI 위에서 클릭했으면 카메라 드래그 무시
-                if (EventSystem.current != null &&
-                    EventSystem.current.IsPointerOverGameObject())
+                if (EventSystem.current.IsPointerOverGameObject())
                     return;
                 
-                // 가구 뤼에서 클릭했으면 카메라 드래그 무시 (가구이동과 겹치지 않게)
+                // 가구 윈에서 클릭했으면 카메라 드래그 무시 (가구이동과 겹치지 않게)
                 if (IsPointerOverFurniture())
                     return;
                 
@@ -154,6 +172,7 @@ namespace RoomCraft.CameraSystem
         /// </summary>
         private void HandleZoom()
         {
+            if (currentMode == CameraMode.FirstPerson) return;
             float scroll = Input.mouseScrollDelta.y;
             if (Mathf.Abs(scroll) > 0.01f)
             {
@@ -215,6 +234,21 @@ namespace RoomCraft.CameraSystem
                 transitionEndPos = targetPoint + Vector3.up * topViewHeight;
                 transitionEndRot = Quaternion.Euler(90f, 0f, 0f);
             }
+            else if (currentMode == CameraMode.FirstPerson)
+            {
+                // 자주 호출되지 않기에 null 체크는 남기는 방향으로 유지함.
+                if (furnitureInteraction != null)
+                    furnitureInteraction.DeselectAll();
+
+                Vector3 spawn = roomBuilder != null
+                    ? roomBuilder.GetFirstPersonSpawnPoint()
+                    : targetPoint + Vector3.up * 1.6f;
+
+                transitionEndPos = spawn;
+                fpYaw = transform.eulerAngles.y;
+                fpPitch = 0f;
+                transitionEndRot = Quaternion.Euler(0f, fpYaw, 0f);
+            }
             else
             {
                 float rad_h = horizontalAngle * Mathf.Deg2Rad;
@@ -274,6 +308,8 @@ namespace RoomCraft.CameraSystem
         /// </summary>
         public void Zoom(float amount)
         {
+
+            if (currentMode == CameraMode.FirstPerson) return;
             if (currentMode == CameraMode.TopView)
             {
                 topViewHeight -= amount * zoomSpeed;
@@ -294,8 +330,55 @@ namespace RoomCraft.CameraSystem
         /// </summary>
         private bool IsPointerOverFurniture()
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            // Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition); 캐싱으로 주석
+            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             return Physics.Raycast(ray, 100f, furnitureLayer);
+        }
+        
+        private void HandleFirstPersonInput()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (EventSystem.current.IsPointerOverGameObject())
+                    return;
+
+                fpDragging = true;
+                fpLastMousePosition = Input.mousePosition;
+            }
+
+            if (Input.GetMouseButtonUp(0))
+            {
+                fpDragging = false;
+            }
+
+            if (fpDragging)
+            {
+                Vector3 delta = Input.mousePosition - fpLastMousePosition;
+                fpYaw += delta.x * lookSpeed * 0.1f;
+                fpPitch -= delta.y * lookSpeed * 0.1f;
+                fpPitch = Mathf.Clamp(fpPitch, -80f, 80f);
+                fpLastMousePosition = Input.mousePosition;
+                transform.rotation = Quaternion.Euler(fpPitch, fpYaw, 0f);
+            }
+            
+            Vector3 move = Vector3.zero;
+            if (Input.GetKey(KeyCode.W)) move += transform.forward;
+            if (Input.GetKey(KeyCode.S)) move -= transform.forward;
+            if (Input.GetKey(KeyCode.A)) move -= transform.right;
+            if (Input.GetKey(KeyCode.D)) move += transform.right;
+
+            move.y = 0f;
+            if (move.sqrMagnitude > 0.0001f)
+            {
+                Vector3 delta2 = move.normalized * (moveSpeed * Time.deltaTime);
+                
+                // CharacterController가 연결되어 있다면 충돌 처리된 이동, 없다면 기존 방식으로 적용
+                if (characterController != null)
+                    characterController.Move(delta2);
+                else 
+                    transform.position += delta2;
+            }
+
         }
     }
 }

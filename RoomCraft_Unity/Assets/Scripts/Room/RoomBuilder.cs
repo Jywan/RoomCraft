@@ -12,6 +12,7 @@ namespace RoomCraft.Room
         
         private GameObject currentRoom;
         private RoomData currentRoomData;
+        private const float EyeHeight = 1.6f;           // 1인칭 시점
 
         public void BuildRoom(RoomData data)
         {
@@ -107,7 +108,30 @@ namespace RoomCraft.Room
             
             wall.tag = "Wall";
         }
+        
+        
+        /// <summary>
+        /// 1인칭 시점 시작 위치. 바닥 삼각분할의 첫번때 삼각형 무게중심을 씀
+        /// 오목한 방 모양이어도 항상 바닥 위의 한점이 보장됨
+        /// </summary>
+        public Vector3 GetFirstPersonSpawnPoint()
+        {
+            if (currentRoom == null) return Vector3.zero;
+            
+            List<Vector2> outline = currentRoomData.GetVertices();
+            List<int> triangles = PolygonUtils.Triangulate(outline);
+            
+            if (triangles.Count < 3)  return Vector3.zero;
 
+            Vector2 a = outline[triangles[0]];
+            Vector2 b = outline[triangles[1]];
+            Vector2 c = outline[triangles[2]];
+            Vector2 centroid = (a + b + c) / 3f;
+            
+            return new Vector3(centroid.x, EyeHeight, centroid.y);
+        }
+        
+        
         public void ClearRoom()
         {
             if (currentRoom != null)
