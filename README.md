@@ -27,9 +27,9 @@
 | 엔진 | Unity 6 (6000.3.x) |
 | 언어 | C# |
 | 렌더링 | URP (Universal Render Pipeline) |
-| 3D 모델링 | ProBuilder |
-| 카메라 | Cinemachine |
-| 입력 처리 | New Input System |
+| 3D 모델링 | 커스텀 메쉬 생성 (Ear Clipping 삼각분할 직접 구현) |
+| 카메라 | 커스텀 카메라 컨트롤러 (탑뷰/자유시점/1인칭 수동 구현) |
+| 입력 처리 | Legacy Input (`UnityEngine.Input`) |
 | 데이터 저장 | JSON |
 
 ## 플랫폼
