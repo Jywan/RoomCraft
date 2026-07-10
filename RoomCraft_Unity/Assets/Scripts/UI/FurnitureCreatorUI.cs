@@ -39,6 +39,7 @@ namespace RoomCraft.UI
         [Header("Preset")]
         [SerializeField] private TMP_Dropdown presetDropdown;
         [SerializeField] private Button savePresetButton;
+        [SerializeField] private Button deletePresetButton;
         
         private Color selectedColor = Color.white;
         private List<FurnitureData> currentPresets = new List<FurnitureData>();
@@ -53,6 +54,7 @@ namespace RoomCraft.UI
             createButton.onClick.AddListener(OnCreateClicked);
             cancelButton.onClick.AddListener(OnCancelClicked);
             savePresetButton.onClick.AddListener(OnSavePresetClicked);
+            deletePresetButton.onClick.AddListener(OnDeletePresetClicked);
             presetDropdown.onValueChanged.AddListener(OnPresetSelected);
             
             // 카테고리 드롭다운 옵션 세팅
@@ -217,6 +219,15 @@ namespace RoomCraft.UI
             
             presetDropdown.AddOptions(options);
             presetDropdown.SetValueWithoutNotify(0);
+        }
+
+        private void OnDeletePresetClicked()
+        {
+            int index = presetDropdown.value;
+            if (index <= 0 || index > currentPresets.Count) return;     // "프리셋 선택" 상태면 무시
+            FurnitureData preset = currentPresets[index - 1];
+            presetManager.DeletePreset(preset.id);
+            RefreshPresetDropdown();
         }
     }
 }

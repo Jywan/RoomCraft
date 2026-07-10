@@ -135,6 +135,7 @@ RoomCraft_Unity/Assets/
 | 1인칭에서 T키를 눌러도 영원히 못 빠져나옴 | `ToggleView()`의 3단 순환 조건 순서가 꼬여서 `FirstPerson` 상태일 때 `SwitchMode(FirstPerson)`(자기 자신)을 호출 → `SwitchMode()`의 "같은 모드면 무시" 가드에 걸려 아무 반응 없음 | `FreeView → FirstPerson`, `FirstPerson → TopView`로 분기 순서 수정 |
 | `CharacterController` 연결해도 1인칭에서 계속 벽을 통과함 | Main Camera에 `Character Controller` 컴포넌트 자체를 추가하지 않은 채(또는 씬 저장 없이) 코드만 반영되어, `characterController != null` 체크가 조용히 충돌 없는 폴백 경로로 빠짐 | 컴포넌트 실제 추가 + 인스펙터 슬롯 연결 + 씬 저장 |
 | `GridSnap` 캐싱 코드가 컴파일 에러 | 이전에 제안한 `gridSnap` 필드 캐싱을 적용할 때 필드 선언 없이 `Start()`의 대입문만 반영됨 | 필드 선언 추가, `HandleDrag()`가 실제로 캐싱된 필드를 쓰도록 완성 |
+| 프리셋 삭제 버튼을 눌러도 반응 없음 | 필드 선언, 씬 연결, `OnDeletePresetClicked()` 메서드까지 다 만들어놓고 `Start()`에서 `onClick.AddListener()` 등록을 안 함 | 리스너 등록 추가 |
 
 </details>
 
