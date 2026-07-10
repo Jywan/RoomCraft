@@ -142,6 +142,15 @@ namespace RoomCraft.UI
                 TextMeshProUGUI text = item.GetComponentInChildren<TextMeshProUGUI>();
                 if (text != null)
                     text.text = fileName.Replace(".json", "");
+                
+                // 썸네일 로드
+                Image thumbnailImage = item.transform.Find("Thumbnail")?.GetComponent<Image>();
+                if (thumbnailImage != null)
+                {
+                    Texture2D thumb = ProjectManager.LoadThumbnail(fileName);
+                    if (thumb != null)
+                        thumbnailImage.sprite = Sprite.Create(thumb, new Rect(0, 0, thumb.width, thumb.height), new Vector2(0.5f, 0.5f));
+                }
 
                 string file = fileName;
                 Button btn = item.GetComponent<Button>();

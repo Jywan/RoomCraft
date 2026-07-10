@@ -29,7 +29,7 @@ namespace RoomCraft.Data
         /// 현재 씬의 방 + 가구 배치를 JSON으로 저장한다.
         /// 파일명은 프로젝트 이름 기반으로..
         /// </summary>
-        public void SaveProject(string projectName, RoomData roomData)
+        public void SaveProject(string projectName, RoomData roomData, byte[] thumbnailPng = null)
         {
             ProjectData project = new ProjectData();
             project.projectName = projectName;
@@ -51,6 +51,13 @@ namespace RoomCraft.Data
             string fileName = SanitizeFileName(projectName) + ".json";
             string filePath = Path.Combine(saveDirectory, fileName);
             File.WriteAllText(filePath, json);
+            
+            // 썸네일도 같이 저장!
+            if (thumbnailPng != null)
+            {
+                string thumbnailPath = Path.Combine(saveDirectory, SanitizeFileName(projectName) + ".png");
+                File.WriteAllBytes(thumbnailPath, thumbnailPng);
+            }
             
             Debug.Log($"프로젝트 저장완료: {filePath}");
         }
@@ -100,6 +107,19 @@ namespace RoomCraft.Data
             return files;
         }
         
+        public static Texture2D LoadThumbnail(string jsonFileName)
+        {
+            string dir = Path.Combine(Application.persistentDataPath, "Projects");
+            string baseName = Path.GetFileNameWithoutExtension(jsonFileName);
+            string filePath = Path.Combine(dir, baseName + ".png");
+
+            if (!File.Exists(filePath)) return null;
+            
+            byte[] data = File.ReadAllBytes(filePath);
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(data);
+            return tex;
+        }
         
         /// <summary>
         /// 저장된 프로젝트를 삭제한다.

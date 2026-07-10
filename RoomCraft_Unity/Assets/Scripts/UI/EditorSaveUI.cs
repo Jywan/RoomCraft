@@ -1,3 +1,4 @@
+using System.Collections;
 using RoomCraft.Data;
 using RoomCraft.Room;
 using TMPro;
@@ -12,10 +13,6 @@ namespace RoomCraft.UI
     /// </summary>
     public class EditorSaveUI : MonoBehaviour
     {
-        // [Header("Main")] 
-        // [SerializeField] private Button saveButton;
-        
-        
         [Header("Save panel")]
         [SerializeField] private GameObject savePanel;
         [SerializeField] private TMP_InputField saveNameInput;
@@ -57,8 +54,19 @@ namespace RoomCraft.UI
                 return;
             }
             
-            projectManager.SaveProject(projectName, roomData);
-            savePanel.SetActive(false);
+            savePanel.SetActive(false);     // 스크린샷에 저장 팝업이 안찍히도록 먼저 숨김!
+            StartCoroutine(CaptureAndSave(projectName, roomData));
+        }
+
+        private IEnumerator CaptureAndSave(string projectName, RoomData roomData)
+        {
+            yield return new WaitForEndOfFrame();   // 팝업이 사라진 프레임이 실제로 그려질 떄까지 대기
+
+            Texture2D screenshot = ScreenCapture.CaptureScreenshotAsTexture();
+            byte[] thumbnailPng = screenshot.EncodeToPNG();
+            Destroy(screenshot);
+            
+            projectManager.SaveProject(projectName, roomData, thumbnailPng);
             Debug.Log($"저장 완료: {projectName}");
         }
     }

@@ -17,7 +17,7 @@
 - **가구 생성**: 카테고리별 기본 형태 + 사용자 치수(cm) 입력
 - **드래그 배치**: 가구를 드래그로 방 안에 배치, 회전, 이동
 - **시점 전환**: 탑뷰(평면도) ↔ 3D 자유시점 ↔ 1인칭 뷰
-- **저장/관리**: 프로젝트 저장/불러오기
+- **저장/관리**: 프로젝트 저장/불러오기, 저장 시 스크린샷을 같이 남겨서 불러오기 목록에서 썸네일로 미리 비교 가능
 - **가구 프리셋**: 자주 쓰는 가구를 즐겨찾기처럼 저장해두고 다른 프로젝트에서도 바로 재사용
 
 ## 기술 스택
@@ -96,6 +96,7 @@ RoomCraft_Unity/Assets/
 - [ ] Phase 6-2: 모바일(Android/iOS) 빌드 배포
 - [x] Phase 7: 1인칭 시점 추가 (WASD 이동, 마우스 시점 회전, 벽 충돌 처리)
 - [x] Phase 8: 가구 프리셋 시스템 (전역 저장, 다른 프로젝트에서도 재사용)
+- [x] Phase 9: 레이아웃 비교 (저장 시 스크린샷 캡처, 불러오기 목록 썸네일 표시)
 
 </details>
 
@@ -136,6 +137,7 @@ RoomCraft_Unity/Assets/
 | `CharacterController` 연결해도 1인칭에서 계속 벽을 통과함 | Main Camera에 `Character Controller` 컴포넌트 자체를 추가하지 않은 채(또는 씬 저장 없이) 코드만 반영되어, `characterController != null` 체크가 조용히 충돌 없는 폴백 경로로 빠짐 | 컴포넌트 실제 추가 + 인스펙터 슬롯 연결 + 씬 저장 |
 | `GridSnap` 캐싱 코드가 컴파일 에러 | 이전에 제안한 `gridSnap` 필드 캐싱을 적용할 때 필드 선언 없이 `Start()`의 대입문만 반영됨 | 필드 선언 추가, `HandleDrag()`가 실제로 캐싱된 필드를 쓰도록 완성 |
 | 프리셋 삭제 버튼을 눌러도 반응 없음 | 필드 선언, 씬 연결, `OnDeletePresetClicked()` 메서드까지 다 만들어놓고 `Start()`에서 `onClick.AddListener()` 등록을 안 함 | 리스너 등록 추가 |
+| 불러오기 목록에 썸네일 추가 후 항목들이 정렬 안 되고 지저분해 보임 | 리스트 항목 높이를 키웠는데(40→70) `Content`의 `Vertical Layout Group`이 `Control Child Size Width`는 꺼져있고 `Child Force Expand Height`는 켜져있어서, 가로는 리스트 폭에 안 맞고 세로는 스크롤 영역 여백만큼 억지로 늘어남 (Layout Group 중첩 문제의 또 다른 변종) | `Control Child Size Width` 켜기, `Child Force Expand Height` 끄기, `Content Size Fitter`(Vertical Fit: Preferred Size) 추가 |
 
 </details>
 
