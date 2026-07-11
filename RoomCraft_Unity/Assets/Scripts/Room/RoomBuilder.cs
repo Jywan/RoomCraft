@@ -14,6 +14,8 @@ namespace RoomCraft.Room
         private RoomData currentRoomData;
         private const float EyeHeight = 1.6f;           // 1인칭 시점
 
+        public const float WallThickness = 0.1f;       // 벽 두께. WallSnap 등 외부에서도 참조
+        
         public void BuildRoom(RoomData data)
         {
             // 기존 방 제거
@@ -78,12 +80,11 @@ namespace RoomCraft.Room
         /// </summary>
         private void CreateWalls(RoomData data, List<Vector2> outline)
         {
-            float wallThickness = 0.1f;
             for (int i = 0; i < outline.Count; i++)
             {
                 Vector2 start = outline[i];
                 Vector2 end = outline[(i + 1) % outline.Count];
-                CreateWallSegment($"Wall_{i}", data, start, end, wallThickness);
+                CreateWallSegment($"Wall_{i}", data, start, end, WallThickness);
             }
         }
         

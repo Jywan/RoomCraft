@@ -1,5 +1,6 @@
 using RoomCraft.CameraSystem;
 using RoomCraft.Data;
+using RoomCraft.UndoRedo;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -16,6 +17,8 @@ namespace RoomCraft.Furniture
         [SerializeField] private LayerMask floorLayer;                  // 바닥 레이어 (드래그 시 Raycast 대상)
         [SerializeField] private LayerMask furnitureLayer;              // 가구 레이어 (클릭 감지용)
         [SerializeField] private CameraController cameraController;     // 1인 칭 중엔 선택/드래그 비활성화를 위해 카메라 컨트롤러 호출 사용.
+        [SerializeField] private UndoManager undoManager;
+        [SerializeField] private WallSnap wallSnap;
         
         private FurnitureObject selectedFurniture = null;
         private bool hasSelection = false;                      // selectedFurniture != null 매 프레임 검사 대신 캐싱 
@@ -27,6 +30,11 @@ namespace RoomCraft.Furniture
         private bool hasCameraController;
         private GridSnap gridSnap;
         private bool hasGridSnap;
+        private bool hasUndoManager;
+        private Vector3 dragStartPosition;
+        private const float DuplicateOffset = 0.3f;
+        private bool duplicateKeyHeld = false;                  // OS 키 반복(auto-repeat)으로 인한 중복 실행 방지용
+        private bool hasWallSnap;
         
         public bool HasSelection => hasSelection;               // 외부 (UI 등)에서 low cost로 선택 여부만 확인할 때 사용
         
@@ -38,18 +46,19 @@ namespace RoomCraft.Furniture
             gridSnap = FindAnyObjectByType<GridSnap>();
             hasGridSnap = gridSnap != null;
             hasCameraController = cameraController != null;
+            hasUndoManager = undoManager != null;
+            hasWallSnap = wallSnap != null;
         }
         
         private void Update()
         {
-            // if (cameraController != null && cameraController.GetCurrentMode() == CameraMode.FirstPerson)
-            //     return;
             if (hasCameraController && cameraController.GetCurrentMode() == CameraMode.FirstPerson) return;
             
             HandleSelection();
             HandleDrag();
             HandleRotation();
             HandleDelete();
+            HandleDuplicate();
         }
         
         // ===== 가구 생성 =====
@@ -59,6 +68,25 @@ namespace RoomCraft.Furniture
         /// 카테고리별 가구를 만들고, FurnitureObject 컴포넌트를 붙여서 초기화
         /// </summary>
         public FurnitureObject CreateFurniture(FurnitureData data)
+        {
+            FurnitureObject furniture = SpawnFurniture(data);
+
+            if (hasUndoManager)
+            {
+                Vector3 pos = furniture.transform.position;
+                float rot = furniture.GetRotationY();
+                undoManager.RecordCommand(new CreateFurnitureCommand(this, data, pos, rot, furniture));
+            }
+            
+            return furniture;
+        }
+        
+        
+        /// <summary>
+        /// Undo/Redo 시스템 전용 - 기록없이 순수 생성만 함.
+        /// (CreateFurniture()가 이걸 부르고 추가로 기록까지 함. 여기서 또 기록하면 무한 루프)
+        /// </summary>
+        public FurnitureObject SpawnFurniture(FurnitureData data)
         {
             GameObject obj = FurnitureModelFactory.Create(data);
             obj.layer = LayerMask.NameToLayer("Furniture");
@@ -123,6 +151,7 @@ namespace RoomCraft.Furniture
                     selectedFurniture.Select();
                     isDragging = true;
                     lastValidPosition = selectedFurniture.transform.position;
+                    dragStartPosition = selectedFurniture.transform.position;   // 드래그 시작위치 기록
                 }
                 else
                 {
@@ -160,13 +189,19 @@ namespace RoomCraft.Furniture
                     selectedFurniture.MoveTo(lastValidPosition);
                     selectedFurniture.Select();         // 색상 복귀
                 }
+                // 실제로 위치가 바뀌었다면 Undo 기록
+                Vector3 finalPos = selectedFurniture.transform.position;
+                if (hasUndoManager && finalPos != dragStartPosition)
+                    undoManager.RecordCommand(
+                        new MoveFurnitureCommand(selectedFurniture, dragStartPosition, finalPos));
+
                 return;
             }
             
             // 바닥에 Raycast해서 위치 가져오기
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
-
+            
             if (Physics.Raycast(ray, out hit, 100f, floorLayer))
             {
                 // 그리드 스냅 적용
@@ -174,7 +209,18 @@ namespace RoomCraft.Furniture
                 if (hasGridSnap)
                     targetPos = gridSnap.Snap(targetPos);
                 
-                selectedFurniture.MoveTo(targetPos);
+                // 벽 스냅 적용(그리드 스냅보다 우선시해서 위치/회전을 덮어씀)
+                if (hasWallSnap && wallSnap.TrySnap(selectedFurniture, targetPos, out Vector3 snappedPos,
+                        out float snappedRotY))
+                {
+                    targetPos = snappedPos;
+                    selectedFurniture.MoveTo(targetPos);
+                    selectedFurniture.SetRotationY(snappedRotY);
+                }
+                else
+                {
+                    selectedFurniture.MoveTo(targetPos);
+                }
                 
                 // 드래그 실시간 검증 (캐싱)
                 if (hasBounds)
@@ -214,7 +260,15 @@ namespace RoomCraft.Furniture
         public void RotateSelected(float angle)
         {
             if (!hasSelection) return;
+            
+            float before = selectedFurniture.GetRotationY();
             selectedFurniture.RotateBy(angle);
+
+            if (hasUndoManager)
+            {
+                float after = selectedFurniture.GetRotationY();
+                undoManager.RecordCommand(new RotateFurnitureCommand(selectedFurniture, before, after));
+            }
         }
 
 
@@ -244,9 +298,68 @@ namespace RoomCraft.Furniture
         public void DeleteSelected()
         {
             if (!hasSelection) return;
-            Destroy(selectedFurniture.gameObject);
+            
+            if (hasUndoManager)
+                undoManager.ExecuteCommand(new DeleteFurnitureCommand(this, selectedFurniture));
+            else
+                Destroy(selectedFurniture.gameObject);
+            
             selectedFurniture = null;
             hasSelection = false;
+        }
+        
+        /// <summary>
+        /// Ctrl+D(맥: Cmd+D)를 누르면 선택된 가구를 복제한다
+        /// </summary>
+        private void HandleDuplicate()
+        {
+            if (!hasSelection) return;
+            
+            bool modifier = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) 
+                || Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
+
+            bool dKeyPressed = Input.GetKey(KeyCode.D);
+
+            if (modifier && dKeyPressed && !duplicateKeyHeld)
+            {
+                DuplicateSelected();
+                duplicateKeyHeld = true;
+            }
+            else if (!dKeyPressed)
+            {
+                duplicateKeyHeld = false;
+            }
+        }
+        
+        /// <summary>
+        /// 선택된 가구를 원복에서 대각선으로 살짝 떨어진 위치에 복제하고,
+        /// 복제본을 곧바로 선택 상태로 전환한다 (이어서 드래그로 옮길 수 있도록)
+        /// </summary>
+        public void DuplicateSelected()
+        {
+            if (!hasSelection) return;
+
+            FurnitureData data = selectedFurniture.GetData();
+            float rotationY = selectedFurniture.GetRotationY();
+            Vector3 duplicatePos = selectedFurniture.transform.position + 
+                                   new Vector3(DuplicateOffset, DuplicateOffset,  DuplicateOffset);
+            
+            if (hasGridSnap)
+                duplicatePos = gridSnap.Snap(duplicatePos);
+
+            FurnitureObject duplicate = SpawnFurniture(data);
+            duplicate.MoveTo(duplicatePos);
+            duplicate.SetRotationY(rotationY);
+            
+            if (hasUndoManager)
+                undoManager.RecordCommand(
+                    new CreateFurnitureCommand(this, data, duplicatePos, rotationY, duplicate));
+            
+            selectedFurniture.Deselect();
+            selectedFurniture = duplicate;
+            selectedFurniture.Select();
+            lastValidPosition = duplicatePos;
+            dragStartPosition = duplicatePos;
         }
         
         
@@ -281,6 +394,16 @@ namespace RoomCraft.Furniture
         public void DeselectAll()
         {
             DeselectCurrent();
+        }
+        
+        /// <summary>
+        /// Undo/Redo로 가구가 파괴되기 직전, 그 가구가 현재 선택 상태였다면 선택 해제.
+        /// (선택된 채로 파괴되면 selectedFurniture가 죽은 참조로 남아 매 프레임 예외 발생함!)
+        /// </summary>
+        public void ClearSelectionIfMatches(FurnitureObject obj)
+        {
+            if (hasSelection && selectedFurniture == obj)
+                DeselectCurrent();
         }
     }
 }

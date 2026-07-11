@@ -92,6 +92,10 @@ namespace RoomCraft.Room
             
             if (bounds != null)
                 bounds.SetRoomShape(roomData.GetVertices(), roomData.height);
+            
+            WallSnap wallSnap = FindAnyObjectByType<WallSnap>();
+            if (wallSnap != null)
+                wallSnap.SetRoomShape(roomData.GetVertices());
         }
     }
 }

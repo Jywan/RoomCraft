@@ -223,6 +223,8 @@ MonoBehaviour:
   cameraController: {fileID: 330585548}
   gridSnap: {fileID: 1470652506}
   editorSaveUI: {fileID: 167608290}
+  undoManager: {fileID: 1810753392}
+  wallSnap: {fileID: 593048417}
 --- !u!114 &12910047
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3696,6 +3698,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 580686108}
   m_CullTransparentMesh: 1
+--- !u!1 &593048416
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 593048418}
+  - component: {fileID: 593048417}
+  m_Layer: 0
+  m_Name: WallSnap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &593048417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 593048416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20aa194e4cd34f20aba0882cddac6fdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomCraft.Furniture.WallSnap
+  snapDistance: 0.3
+  snapEnabled: 1
+--- !u!4 &593048418
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 593048416}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 549.5, y: 215.58853, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &628575804
 GameObject:
   m_ObjectHideFlags: 0
@@ -9183,7 +9231,9 @@ MonoBehaviour:
   furnitureLayer:
     serializedVersion: 2
     m_Bits: 64
-  cameraController: {fileID: 0}
+  cameraController: {fileID: 330585548}
+  undoManager: {fileID: 1810753392}
+  wallSnap: {fileID: 593048417}
 --- !u!4 &1470652504
 Transform:
   m_ObjectHideFlags: 0
@@ -11496,6 +11546,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
+--- !u!1 &1810753391
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1810753393}
+  - component: {fileID: 1810753392}
+  m_Layer: 0
+  m_Name: UndoManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1810753392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1810753391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f1dc6fff138472ca73878a82c3cdb21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RoomCraft.UndoRedo.UndoManager
+--- !u!4 &1810753393
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1810753391}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 549.5, y: 215.58853, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1827008730
 GameObject:
   m_ObjectHideFlags: 0
@@ -15047,5 +15141,7 @@ SceneRoots:
   - {fileID: 1466633103}
   - {fileID: 1470652504}
   - {fileID: 1151258224}
+  - {fileID: 1810753393}
+  - {fileID: 593048418}
   - {fileID: 167608288}
   - {fileID: 2113588962}

@@ -1,5 +1,7 @@
 using RoomCraft.CameraSystem;
+using RoomCraft.Data;
 using RoomCraft.Furniture;
+using RoomCraft.UndoRedo;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -26,6 +28,8 @@ namespace RoomCraft.UI
         [SerializeField] private CameraController cameraController;
         [SerializeField] private GridSnap gridSnap;
         [SerializeField] private EditorSaveUI editorSaveUI;
+        [SerializeField] private UndoManager undoManager;
+        [SerializeField] private WallSnap wallSnap;
         
         private void Start()
         {
@@ -40,8 +44,6 @@ namespace RoomCraft.UI
         private void Update()
         {
             // UI 입력 중이면 단축키 무시
-            // if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null)
-            //     return;
             if (EventSystem.current.currentSelectedGameObject != null)
                 return;
             
@@ -49,6 +51,24 @@ namespace RoomCraft.UI
                 cameraController.ToggleView();
             if (Input.GetKeyDown(KeyCode.G))
                 gridSnap.ToggleSnap();
+            if (Input.GetKeyDown(KeyCode.B))
+                wallSnap.ToggleSnap();
+            
+            // Undo/Redo (mac: Cmd / window: ctrl 둘다 지원)
+            bool modifier = Input.GetKey(KeyCode.LeftControl) 
+                            || Input.GetKey(KeyCode.RightControl) 
+                            || Input.GetKey(KeyCode.LeftCommand) 
+                            || Input.GetKey(KeyCode.RightCommand);
+
+            if (modifier && Input.GetKeyDown(KeyCode.Z))
+            {
+                bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                
+                if (shift)
+                    undoManager.Redo();
+                else
+                    undoManager.Undo();
+            }
         }
 
         private void OnMainMenu()
